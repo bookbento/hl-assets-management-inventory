@@ -16,21 +16,21 @@ export function SummaryCards({ stats }: SummaryCardsProps) {
       value: stats.total,
       icon: Package,
       color: "text-blue-500",
-      bg: "bg-blue-50",
+      bg: "bg-white",
     },
     {
       label: "In Use",
       value: stats.inUse,
       icon: CheckCircle,
-      color: "text-primary",
-      bg: "bg-primary/10",
+      color: "text-blue-600",
+      bg: "bg-blue-100/50",
     },
     {
       label: "Available",
       value: stats.available,
       icon: RefreshCw,
-      color: "text-purple-500",
-      bg: "bg-purple-50",
+      color: "text-emerald-600",
+      bg: "bg-emerald-50",
     },
     {
       label: "Maintenance",
@@ -40,7 +40,6 @@ export function SummaryCards({ stats }: SummaryCardsProps) {
       bg: "bg-orange-50",
     },
   ];
-
   return (
     <>
       {items.map((item, i) => (
@@ -49,7 +48,11 @@ export function SummaryCards({ stats }: SummaryCardsProps) {
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: i * 0.1 }}
-          className="apple-card p-5 flex flex-col justify-between col-span-1 text-left"
+          className={cn(
+            "p-5 flex flex-col justify-between col-span-1 text-left",
+            "rounded-[var(--radius-apple)] border border-[#d2d2d7] shadow-sm transition-all duration-200",
+            item.bg,
+          )}
         >
           <span className="text-[10px] font-bold text-[#86868B] uppercase tracking-wider">
             {item.label}

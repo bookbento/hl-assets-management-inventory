@@ -33,21 +33,6 @@ export function DashboardShell({ children }: { children: React.ReactNode }) {
                 <Bell className="w-4 h-4 text-[#424245]" />
                 <span className="absolute top-2.5 right-2.5 w-1.5 h-1.5 bg-primary rounded-full border border-white"></span>
               </button>
-              <div className="flex items-center gap-3 pl-2 border-l border-[#D2D2D7]">
-                <div className="text-right hidden sm:block">
-                  <p className="text-sm font-semibold leading-none">
-                    Admin User
-                  </p>
-                  <p className="text-[10px] text-[#86868B] font-bold uppercase mt-1">
-                    IT Architect
-                  </p>
-                </div>
-                <div className="w-10 h-10 rounded-full bg-gradient-to-tr from-gray-200 to-gray-300 border border-[#D2D2D7] flex items-center justify-center p-0.5 shadow-sm overflow-hidden">
-                  <div className="w-full h-full rounded-full bg-white flex items-center justify-center">
-                    <User className="w-5 h-5 text-[#86868B]" />
-                  </div>
-                </div>
-              </div>
             </div>
           </div>
         </header>
