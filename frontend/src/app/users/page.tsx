@@ -2,10 +2,22 @@
 
 import { DashboardShell } from "@/components/layout/DashboardShell";
 import { MOCK_USERS } from "@/lib/mockups/mockup-data";
-import { Briefcase, Plus, Search, MoreHorizontal } from "lucide-react";
-import { motion } from "framer-motion";
+import { Briefcase, Plus, Search, MoreHorizontal, CheckCircle } from "lucide-react";
+import { useState } from "react";
+import { motion, AnimatePresence } from "framer-motion";
+import { UserForm } from "@/components/users/UserForm";
 
 export default function UsersPage() {
+  const [showForm, setShowForm] = useState(false);
+  const [showSuccess, setShowSuccess] = useState(false);
+
+  const handleAddUser = (data: any) => {
+    console.log('New User:', data);
+    setShowForm(false);
+    setShowSuccess(true);
+    setTimeout(() => setShowSuccess(false), 3000);
+  };
+
   return (
     <DashboardShell>
       <div className="flex items-center justify-between mb-8">
@@ -15,7 +27,9 @@ export default function UsersPage() {
             Manage staff access and equipment assignments.
           </p>
         </div>
-        <button className="btn-primary flex items-center gap-2">
+        <button
+          className="btn-primary flex items-center gap-2"
+          onClick={() => setShowForm(true)}>
           <Plus className="w-4 h-4" />
           <span>Add Employee</span>
         </button>
@@ -100,6 +114,36 @@ export default function UsersPage() {
           </table>
         </div>
       </div>
+
+      {/* User Form Modal */}
+      <AnimatePresence>
+        {showForm && (
+          <UserForm
+            onClose={() => setShowForm(false)}
+            onSubmit={handleAddUser}
+          />
+        )}
+      </AnimatePresence>
+
+      {/* Success Notification Toast */}
+      <AnimatePresence>
+        {showSuccess && (
+          <motion.div
+            initial={{ opacity: 0, y: 100 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: 100 }}
+            className="fixed bottom-8 right-8 z-[200] bg-gray-900 text-white px-6 py-4 rounded-apple-lg shadow-2xl flex items-center gap-4 border border-white/10"
+          >
+            <div className="w-10 h-10 rounded-full bg-primary/20 flex items-center justify-center">
+              <CheckCircle className="w-6 h-6 text-primary" />
+            </div>
+            <div className="text-left">
+              <p className="font-bold text-sm">Employee Added Successfully</p>
+              <p className="text-xs text-gray-400 font-medium">New staff profile has been registered.</p>
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
     </DashboardShell>
   );
 }

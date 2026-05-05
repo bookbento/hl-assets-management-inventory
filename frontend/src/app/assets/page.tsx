@@ -2,13 +2,22 @@
 "use client";
 
 import { useState } from "react";
+import { AssetForm } from "@/components/assets/AssetForm";
 import { DashboardShell } from "@/components/layout/DashboardShell";
 import { AssetTable } from "@/components/assets/AssetTable";
 import { Plus, Download, CheckCircle } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 
 export default function AssetsPage() {
+  const [showForm, setShowForm] = useState(false);
   const [showSuccess, setShowSuccess] = useState(false);
+
+  const handleAddAsset = (data: any) => {
+    console.log('New Asset:', data);
+    setShowForm(false);
+    setShowSuccess(true);
+    setTimeout(() => setShowSuccess(false), 3000);
+  };
 
   return (
     <DashboardShell>
@@ -26,7 +35,9 @@ export default function AssetsPage() {
             <Download className="w-4 h-4" />
             <span>Export Inventory</span>
           </button>
-          <button className="btn-primary flex items-center gap-2 shadow-md shadow-primary/20">
+          <button
+            onClick={() => setShowForm(true)}
+            className="btn-primary flex items-center gap-2 shadow-md shadow-primary/20">
             <Plus className="w-4 h-4" />
             <span>Add Asset</span>
           </button>
@@ -34,6 +45,16 @@ export default function AssetsPage() {
       </div>
 
       <AssetTable />
+
+      {/* Asset Form Modal */}
+      <AnimatePresence>
+        {showForm && (
+          <AssetForm
+            onClose={() => setShowForm(false)}
+            onSubmit={handleAddAsset}
+          />
+        )}
+      </AnimatePresence>
 
       {/* Success Notification Toast */}
       <AnimatePresence>
