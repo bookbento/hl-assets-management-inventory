@@ -30,3 +30,5 @@ pnpm-debug.log*
 # prisma
 /backend/prisma/*.db
 /backend/prisma/*.db-journal
+
+/generated/prisma

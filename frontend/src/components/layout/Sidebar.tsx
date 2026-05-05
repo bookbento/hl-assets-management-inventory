@@ -16,7 +16,7 @@ import { cn } from "@/lib/mockups/utils";
 const sidebarItems = [
   { label: "Dashboard", icon: LayoutDashboard, href: "/" },
   { label: "Assets", icon: Package, href: "/assets" },
-  { label: "Users", icon: Users, href: "/users" },
+  { label: "Employees", icon: Users, href: "/employees" },
   { label: "Settings", icon: Settings, href: "/settings" },
 ];
 

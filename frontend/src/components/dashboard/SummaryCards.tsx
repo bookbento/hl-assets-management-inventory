@@ -10,6 +10,11 @@ interface SummaryCardsProps {
 }
 
 export function SummaryCards({ stats }: SummaryCardsProps) {
+  if (!stats) {
+
+    return <div>Loading...</div>;
+
+  }
   const items = [
     {
       label: "Total Assets",

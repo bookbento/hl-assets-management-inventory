@@ -5,14 +5,25 @@ import { DashboardShell } from "@/components/layout/DashboardShell";
 import { SummaryCards } from "@/components/dashboard/SummaryCards";
 import { AssetTable } from "@/components/assets/AssetTable";
 import { motion } from "framer-motion";
+import { useQuery } from "@tanstack/react-query";
+import { getAssetSummary } from "@/lib/api";
+import { Loader2 } from "lucide-react";
 
 export default function DashboardPage() {
-  const stats = {
-    total: 32,
-    inUse: 20,
-    available: 10,
-    maintenance: 2,
-  };
+  const { data: stats, isLoading } = useQuery({
+    queryKey: ["asset-summary"],
+    queryFn: getAssetSummary,
+  });
+
+  if (isLoading) {
+    return (
+      <DashboardShell>
+        <div className="flex items-center justify-center h-full">
+          <Loader2 className="w-8 h-8 animate-spin text-primary" />
+        </div>
+      </DashboardShell>
+    );
+  }
 
   return (
     <DashboardShell>
@@ -31,27 +42,25 @@ export default function DashboardPage() {
             Category Distribution
           </h4>
           <div className="flex-1 flex flex-col justify-center gap-6">
-            {[
-              { label: "Laptops", value: 42, color: "bg-primary" },
-              { label: "Peripherals", value: 28, color: "bg-primary/60" },
-              { label: "Monitors", value: 20, color: "bg-primary/40" },
-              { label: "Others", value: 10, color: "bg-gray-300" },
-            ].map((item) => (
-              <div key={item.label} className="space-y-2 text-left">
-                <div className="flex justify-between text-xs font-bold text-[#1D1D1F]">
-                  <span>{item.label}</span>
-                  <span>{item.value}%</span>
+            {stats?.categoryDistribution?.map((item: any) => {
+              const percentage = Math.round((item._count.id / stats.total) * 100);
+              return (
+                <div key={item.category} className="space-y-2 text-left">
+                  <div className="flex justify-between text-xs font-bold text-[#1D1D1F]">
+                    <span>{item.category}</span>
+                    <span>{percentage}%</span>
+                  </div>
+                  <div className="w-full h-2 bg-gray-100 rounded-full overflow-hidden">
+                    <motion.div
+                      initial={{ width: 0 }}
+                      animate={{ width: `${percentage}%` }}
+                      transition={{ duration: 1, delay: 0.5 }}
+                      className="h-full bg-primary"
+                    />
+                  </div>
                 </div>
-                <div className="w-full h-2 bg-gray-100 rounded-full overflow-hidden">
-                  <motion.div
-                    initial={{ width: 0 }}
-                    animate={{ width: `${item.value}%` }}
-                    transition={{ duration: 1, delay: 0.5 }}
-                    className={`h-full ${item.color}`}
-                  />
-                </div>
-              </div>
-            ))}
+              );
+            })}
           </div>
         </div>
 

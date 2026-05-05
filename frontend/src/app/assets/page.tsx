@@ -7,16 +7,37 @@ import { DashboardShell } from "@/components/layout/DashboardShell";
 import { AssetTable } from "@/components/assets/AssetTable";
 import { Plus, Download, CheckCircle } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { createAsset } from "@/lib/api";
+import { toast } from "react-hot-toast";
 
 export default function AssetsPage() {
   const [showForm, setShowForm] = useState(false);
   const [showSuccess, setShowSuccess] = useState(false);
+  const queryClient = useQueryClient();
+
+  const mutation = useMutation({
+    mutationFn: createAsset,
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["assets"] });
+      queryClient.invalidateQueries({ queryKey: ["asset-summary"] });
+      setShowForm(false);
+      setShowSuccess(true);
+      setTimeout(() => setShowSuccess(false), 3000);
+    },
+    onError: (error: any) => {
+      toast.error(error.message || "Failed to create asset");
+    },
+  });
 
   const handleAddAsset = (data: any) => {
-    console.log('New Asset:', data);
-    setShowForm(false);
-    setShowSuccess(true);
-    setTimeout(() => setShowSuccess(false), 3000);
+    // Ensure dates are correctly formatted for the API
+    const assetData = {
+      ...data,
+      purchaseDate: data.purchaseDate ? new Date(data.purchaseDate).toISOString() : null,
+      warrantyExpiry: data.warrantyExpiry ? new Date(data.warrantyExpiry).toISOString() : null,
+    };
+    mutation.mutate(assetData);
   };
 
   return (

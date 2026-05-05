@@ -3,12 +3,12 @@
   "version": "0.1.0",
   "private": true,
   "scripts": {
-    "dev": "pnpm -r --parallel dev",
+    "dev": "pnpm run backend:dev & pnpm run frontend:dev",
     "build": "pnpm -r build",
     "start": "pnpm -r start",
     "lint": "pnpm -r lint",
-    "backend:dev": "pnpm --filter backend dev",
-    "frontend:dev": "pnpm --filter frontend dev"
+    "backend:dev": "pnpm --dir backend start:dev",
+    "frontend:dev": "pnpm --dir frontend dev"
   },
   "devDependencies": {
     "typescript": "^5",

@@ -1,52 +1,113 @@
-// prisma/schema.prisma
-datasource db {
-  provider = "postgresql"
-  url      = env("DATABASE_URL")
+enum AssetStatus {
+  AVAILABLE
+  IN_USE
+  MAINTENANCE
+  RETIRED
+}
+
+enum AssetCategory {
+  LAPTOP
+  MONITOR
+  PERIPHERAL
+  NETWORKING
+  MOBILE
+  OTHER
 }
 
 generator client {
   provider = "prisma-client-js"
 }
 
-enum AssetCategory {
-  LAPTOP
-  MONITOR
-  KEYBOARD
-  MOUSE
-  DESK
-  CHAIR
-  SOFTWARE
-  OTHER
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
 }
 
-enum AssetStatus {
-  IN_USE
-  AVAILABLE
-  MAINTENANCE
-  RETIRED
+model BusinessUnit {
+  id          String       @id @default(uuid())
+  name        String       @unique
+  createdAt   DateTime     @default(now())
+  updatedAt   DateTime     @updatedAt
+  departments Department[]
+  employees   Employee[]
+}
+
+model Department {
+  id             String       @id @default(uuid())
+  name           String
+  businessUnitId String
+  createdAt      DateTime     @default(now())
+  updatedAt      DateTime     @updatedAt
+  businessUnit   BusinessUnit @relation(fields: [businessUnitId], references: [id], onDelete: Cascade)
+  jobTitles      JobTitle[]
+  employees      Employee[]
+}
+
+model JobTitle {
+  id           String     @id @default(uuid())
+  name         String
+  departmentId String
+  createdAt    DateTime   @default(now())
+  updatedAt    DateTime   @updatedAt
+  department   Department @relation(fields: [departmentId], references: [id], onDelete: Cascade)
+  employees    Employee[]
+}
+
+model Employee {
+  id             String            @id @default(uuid())
+  name           String
+  email          String            @unique
+  phone          String?
+  businessUnitId String
+  departmentId   String
+  jobTitleId     String
+  createdAt      DateTime          @default(now())
+  updatedAt      DateTime          @updatedAt
+  businessUnit   BusinessUnit      @relation(fields: [businessUnitId], references: [id], onDelete: Restrict)
+  department     Department        @relation(fields: [departmentId], references: [id], onDelete: Restrict)
+  jobTitle       JobTitle          @relation(fields: [jobTitleId], references: [id], onDelete: Restrict)
+  employeeAssets Employee_Assets[]
+  userLogin      UserLogin?
 }
 
 model Asset {
-  id            String        @id @default(uuid())
-  name          String
-  category      AssetCategory
-  status        AssetStatus
-  assignedTo    String?
-  purchaseDate  DateTime
+  id             String            @id @default(uuid())
+  name           String
+  description    String?
+  serialNumber   String            @unique
+  category       AssetCategory
+  status         AssetStatus       @default(AVAILABLE)
+  purchaseDate   DateTime?
   warrantyExpiry DateTime?
-  createdAt     DateTime      @default(now())
-  updatedAt     DateTime      @updatedAt
+  employeeAssets Employee_Assets[]
+  createdAt      DateTime          @default(now())
+  updatedAt      DateTime          @updatedAt
 }
 
-model User {
-  id        String    @id @default(uuid())
-  email     String    @unique
-  password  String
-  role      UserRole  @default(ADMIN) // Admin only for v1
-  createdAt DateTime  @default(now())
-  updatedAt DateTime  @updatedAt
+model Employee_Assets {
+  id           String    @id @default(uuid())
+  employeeId   String
+  assetId      String
+  assignedDate DateTime  @default(now())
+  returnDate   DateTime?
+  createdAt    DateTime  @default(now())
+  updatedAt    DateTime  @updatedAt
+  asset        Asset     @relation(fields: [assetId], references: [id], onDelete: Cascade)
+  employee     Employee  @relation(fields: [employeeId], references: [id], onDelete: Cascade)
 }
 
-enum UserRole {
-  ADMIN
+model UserLogin {
+  id         String   @id @default(uuid())
+  username   String   @unique
+  password   String
+  role       Role     @default(user)
+  employeeId String   @unique
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+  employee   Employee @relation(fields: [employeeId], references: [id], onDelete: Cascade)
+}
+
+enum Role {
+  admin
+  user
 }

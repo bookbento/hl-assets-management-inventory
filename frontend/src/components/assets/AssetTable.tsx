@@ -8,10 +8,11 @@ import {
   getPaginationRowModel,
   useReactTable,
 } from "@tanstack/react-table";
-import { Search, ChevronLeft, ChevronRight } from "lucide-react";
-import { Asset, AssetStatus } from "@/lib/mockups/types";
-import { MOCK_ASSETS } from "@/lib/mockups/mockup-data";
+import { Search, ChevronLeft, ChevronRight, Loader2 } from "lucide-react";
+import { Asset, AssetStatus } from "@prisma/client";
 import { cn } from "@/lib/mockups/utils";
+import { useQuery } from "@tanstack/react-query";
+import { getAssets } from "@/lib/api";
 
 const statusColors = {
   [AssetStatus.AVAILABLE]: "bg-primary/10 text-primary border-primary/20",
@@ -66,30 +67,62 @@ export const columns: ColumnDef<Asset>[] = [
   {
     accessorKey: "assignedTo",
     header: "Assigned To",
-    cell: ({ row }) => (
-      <div className="text-sm text-[#424245]">
-        {row.getValue("assignedTo") || "—"}
-      </div>
-    ),
+    cell: ({ row }) => {
+      // @ts-ignore - user is included in the response
+      const userName = row.original.user?.name || row.original.assignedTo;
+      return (
+        <div className="text-sm text-[#424245]">
+          {userName || "—"}
+        </div>
+      );
+    },
   },
   {
     accessorKey: "warrantyExpiry",
     header: "Warranty",
-    cell: ({ row }) => (
-      <span className="text-sm text-[#86868B] font-medium">
-        {row.getValue("warrantyExpiry")}
-      </span>
-    ),
+    cell: ({ row }) => {
+      const date = row.getValue("warrantyExpiry") as string;
+      return (
+        <span className="text-sm text-[#86868B] font-medium">
+          {date ? new Date(date).toLocaleDateString() : "—"}
+        </span>
+      );
+    },
   },
 ];
 
 export function AssetTable() {
+  const [page, setPage] = React.useState(1);
+  const limit = 10;
+
+  const { data, isLoading, error } = useQuery({
+    queryKey: ["assets", { page, limit }],
+    queryFn: () => getAssets({ page, limit }),
+  });
+
   const table = useReactTable({
-    data: MOCK_ASSETS,
+    data: data?.data || [],
     columns,
     getCoreRowModel: getCoreRowModel(),
-    getPaginationRowModel: getPaginationRowModel(),
+    manualPagination: true,
   });
+
+  if (isLoading) {
+    return (
+      <div className="apple-card overflow-hidden flex-1 flex flex-col items-center justify-center min-h-[400px] bg-white">
+        <Loader2 className="w-8 h-8 animate-spin text-primary" />
+        <p className="mt-2 text-sm text-[#86868B]">Loading assets...</p>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="apple-card overflow-hidden flex-1 flex flex-col items-center justify-center min-h-[400px] bg-white">
+        <p className="text-sm text-red-500">Error loading assets. Please try again.</p>
+      </div>
+    );
+  }
 
   return (
     <div className="apple-card overflow-hidden flex-1 flex flex-col min-h-0 bg-white">
@@ -143,23 +176,23 @@ export function AssetTable() {
             {table.getRowModel().rows.length}
           </span>{" "}
           of{" "}
-          <span className="font-bold text-[#1D1D1F]">{MOCK_ASSETS.length}</span>{" "}
+          <span className="font-bold text-[#1D1D1F]">{data?.total || 0}</span>{" "}
           assets
         </div>
         <div className="flex items-center gap-1">
           <button
-            onClick={() => table.previousPage()}
-            disabled={!table.getCanPreviousPage()}
+            onClick={() => setPage((old) => Math.max(old - 1, 1))}
+            disabled={page === 1}
             className="w-8 h-8 flex items-center justify-center border border-[#D2D2D7] rounded-lg hover:bg-gray-50 disabled:opacity-30 transition-colors text-sm"
           >
             ‹
           </button>
           <div className="w-8 h-8 flex items-center justify-center bg-primary text-white rounded-lg font-bold text-xs">
-            1
+            {page}
           </div>
           <button
-            onClick={() => table.nextPage()}
-            disabled={!table.getCanNextPage()}
+            onClick={() => setPage((old) => (data?.totalPages && old < data.totalPages ? old + 1 : old))}
+            disabled={!data || page >= (data.totalPages || 1)}
             className="w-8 h-8 flex items-center justify-center border border-[#D2D2D7] rounded-lg hover:bg-gray-50 disabled:opacity-30 transition-colors text-sm"
           >
             ›
