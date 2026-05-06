@@ -8,7 +8,7 @@ import {
   getPaginationRowModel,
   useReactTable,
 } from "@tanstack/react-table";
-import { Search, ChevronLeft, ChevronRight, Loader2 } from "lucide-react";
+import { Loader2, Pencil, Trash2, } from "lucide-react";
 import { Asset, AssetStatus } from "@prisma/client";
 import { cn } from "@/lib/mockups/utils";
 import { useQuery } from "@tanstack/react-query";
@@ -70,11 +70,7 @@ export const columns: ColumnDef<Asset>[] = [
     cell: ({ row }) => {
       // @ts-ignore - user is included in the response
       const userName = row.original.user?.name || row.original.assignedTo;
-      return (
-        <div className="text-sm text-[#424245]">
-          {userName || "—"}
-        </div>
-      );
+      return <div className="text-sm text-[#424245]">{userName || "—"}</div>;
     },
   },
   {
@@ -89,7 +85,28 @@ export const columns: ColumnDef<Asset>[] = [
       );
     },
   },
+      {
+      id: 'actions',
+      header: () => <div className="text-right">Actions</div>,
+      cell: ({ row }) => (
+        <div className="flex items-center justify-end gap-2">
+          <button 
+            // onClick={() => onEdit?.(row.original)}
+            className="p-1.5 hover:bg-gray-100 rounded-lg transition-colors text-[#86868B] hover:text-primary"
+          >
+            <Pencil className="w-4 h-4" />
+          </button>
+          <button 
+            // onClick={() => onDelete?.(row.original.id)}
+            className="p-1.5 hover:bg-red-50 rounded-lg transition-colors text-[#86868B] hover:text-red-500"
+          >
+            <Trash2 className="w-4 h-4" />
+          </button>
+        </div>
+      ),
+    },
 ];
+//  [onEdit, onDelete]
 
 export function AssetTable() {
   const [page, setPage] = React.useState(1);
@@ -119,7 +136,9 @@ export function AssetTable() {
   if (error) {
     return (
       <div className="apple-card overflow-hidden flex-1 flex flex-col items-center justify-center min-h-[400px] bg-white">
-        <p className="text-sm text-red-500">Error loading assets. Please try again.</p>
+        <p className="text-sm text-red-500">
+          Error loading assets. Please try again.
+        </p>
       </div>
     );
   }
@@ -191,7 +210,11 @@ export function AssetTable() {
             {page}
           </div>
           <button
-            onClick={() => setPage((old) => (data?.totalPages && old < data.totalPages ? old + 1 : old))}
+            onClick={() =>
+              setPage((old) =>
+                data?.totalPages && old < data.totalPages ? old + 1 : old,
+              )
+            }
             disabled={!data || page >= (data.totalPages || 1)}
             className="w-8 h-8 flex items-center justify-center border border-[#D2D2D7] rounded-lg hover:bg-gray-50 disabled:opacity-30 transition-colors text-sm"
           >
