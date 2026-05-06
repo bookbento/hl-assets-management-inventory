@@ -1,28 +1,34 @@
 # backend/Dockerfile
 # Stage 1: Build the NestJS application
-FROM node:18-alpine AS builder
+FROM node:22-alpine AS builder
+
+# Install openssl for Prisma
+RUN apk add --no-cache openssl
+
+# Install pnpm
+RUN corepack enable && corepack prepare pnpm@latest --activate
 
 WORKDIR /app
 
-COPY package.json package-lock.json ./
-RUN npm ci
+COPY package.json ./
+RUN pnpm install --no-frozen-lockfile
 
 COPY . .
 RUN npx prisma generate
-RUN npm run build
+RUN pnpm run build
 
 # Stage 2: Run the production application
-FROM node:18-alpine AS runner
+FROM node:22-alpine AS runner
+
+# Install openssl for Prisma runtime
+RUN apk add --no-cache openssl
 
 WORKDIR /app
 
-# Install production dependencies only
-COPY --from=builder /app/package.json /app/package-lock.json ./
-RUN npm ci --omit=dev
-
-# Copy compiled application and prisma stuff
+# Copy everything needed from builder
+COPY --from=builder /app/package.json ./
+COPY --from=builder /app/node_modules ./node_modules
 COPY --from=builder /app/dist ./dist
-COPY --from=builder /app/node_modules/.prisma ./node_modules/.prisma
 COPY --from=builder /app/prisma ./prisma
 
 # Expose the port the app runs on
