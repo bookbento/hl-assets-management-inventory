@@ -20,16 +20,32 @@ const sidebarItems = [
   { label: "Settings", icon: Settings, href: "/settings" },
 ];
 
-export function Sidebar() {
+interface SidebarProps {
+  className?: string;
+  isDrawer?: boolean;
+}
+
+export function Sidebar({ className, isDrawer = false }: SidebarProps) {
   const pathname = usePathname();
 
   return (
-    <div className="w-64 h-full bg-white border-r border-[#D2D2D7] flex flex-col fixed left-0 top-0 z-50">
-      <div className="p-6 flex items-center gap-3">
-        <div className="w-8 h-8 rounded-lg bg-primary flex items-center justify-center shadow-lg shadow-primary/20">
+    <div className={cn(
+      "h-full bg-white border-r border-[#D2D2D7] flex flex-col transition-all duration-300",
+      !isDrawer && "fixed left-0 top-0 z-50 hidden lg:flex lg:w-64 md:flex md:w-20",
+      isDrawer && "w-full",
+      className
+    )}>
+      <div className={cn(
+        "p-6 flex items-center gap-3 overflow-hidden",
+        !isDrawer && "md:justify-center lg:justify-start"
+      )}>
+        <div className="w-8 h-8 rounded-lg bg-primary flex items-center justify-center shrink-0 shadow-lg shadow-primary/20">
           <Package className="w-5 h-5 text-white" />
         </div>
-        <span className="font-bold text-xl tracking-tight text-[#1D1D1F]">
+        <span className={cn(
+          "font-bold text-xl tracking-tight text-[#1D1D1F] transition-opacity duration-300",
+          !isDrawer && "md:hidden lg:block"
+        )}>
           SM IT
         </span>
       </div>
@@ -39,30 +55,43 @@ export function Sidebar() {
           <Link
             key={item.href}
             href={item.href}
+            title={item.label}
             className={cn(
-              "flex items-center gap-3 px-3 py-2 rounded-lg font-medium transition-all group",
+              "flex items-center gap-3 px-3 py-2 rounded-lg font-medium transition-all group overflow-hidden",
               pathname === item.href
                 ? "bg-primary/10 text-primary"
                 : "text-[#424245] hover:bg-gray-100",
+              !isDrawer && "md:justify-center lg:justify-start"
             )}
           >
             <item.icon
               className={cn(
-                "w-5 h-5 transition-transform group-hover:scale-110",
+                "w-5 h-5 shrink-0 transition-transform group-hover:scale-110",
                 pathname === item.href ? "text-primary" : "text-[#86868B]",
               )}
             />
-            <span>{item.label}</span>
+            <span className={cn(
+              "transition-opacity duration-300 whitespace-nowrap",
+              !isDrawer && "md:hidden lg:block"
+            )}>
+              {item.label}
+            </span>
           </Link>
         ))}
       </nav>
 
       <div className="p-4 border-t border-[#D2D2D7]">
-        <div className="flex items-center gap-3 px-2 py-3 rounded-xl hover:bg-gray-50 transition-colors cursor-pointer group">
-          <div className="w-9 h-9 rounded-full bg-gradient-to-tr from-gray-200 to-gray-300 flex items-center justify-center text-xs font-bold text-[#1D1D1F] border border-[#D2D2D7]">
+        <div className={cn(
+          "flex items-center gap-3 px-2 py-3 rounded-xl hover:bg-gray-50 transition-colors cursor-pointer group overflow-hidden",
+          !isDrawer && "md:justify-center lg:justify-start"
+        )}>
+          <div className="w-9 h-9 rounded-full bg-gradient-to-tr from-gray-200 to-gray-300 flex items-center justify-center text-xs font-bold text-[#1D1D1F] border border-[#D2D2D7] shrink-0">
             AD
           </div>
-          <div className="flex-1 overflow-hidden text-left">
+          <div className={cn(
+            "flex-1 overflow-hidden text-left transition-opacity duration-300",
+            !isDrawer && "md:hidden lg:block"
+          )}>
             <p className="text-sm font-semibold truncate text-[#1D1D1F]">
               Admin User
             </p>
@@ -70,7 +99,10 @@ export function Sidebar() {
               IT Architect
             </p>
           </div>
-          <LogOut className="w-4 h-4 text-[#86868B] group-hover:text-red-500 transition-colors" />
+          <LogOut className={cn(
+            "w-4 h-4 text-[#86868B] group-hover:text-red-500 transition-colors shrink-0",
+            !isDrawer && "md:hidden lg:block"
+          )} />
         </div>
       </div>
     </div>

@@ -16,6 +16,7 @@ import { getAssets, deleteAsset, updateAsset } from "@/lib/api";
 import { toast } from "react-hot-toast";
 import { AssetForm, AssetFormValues } from "./AssetForm";
 import { motion, AnimatePresence } from "framer-motion";
+import { useSearchParams } from "next/navigation";
 
 const statusColors = {
   [AssetStatus.AVAILABLE]: "bg-primary/10 text-primary border-primary/20",
@@ -26,7 +27,10 @@ const statusColors = {
 
 
 export function AssetTable() {
+  const searchParams = useSearchParams();
+  const search = searchParams?.get("search") || "";
   const queryClient = useQueryClient();
+
   const [page, setPage] = React.useState(1);
   const limit = 10;
 
@@ -171,8 +175,8 @@ export function AssetTable() {
     },
   ], [deleteMutation.isPending]);
   const { data, isLoading, error } = useQuery({
-    queryKey: ["assets", { page, limit }],
-    queryFn: () => getAssets({ page, limit }),
+    queryKey: ["assets", { page, limit, search }],
+    queryFn: () => getAssets({ page, limit, search }),
   });
 
   const table = useReactTable({

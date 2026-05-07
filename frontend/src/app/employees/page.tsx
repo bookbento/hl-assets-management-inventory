@@ -8,11 +8,22 @@ import { EmployeeForm } from "@/components/employees/EmployeeForm";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { getEmployees, createEmployee, updateEmployee, deleteEmployee } from "@/lib/api";
 import { toast } from "react-hot-toast";
+import { useRouter, useSearchParams } from "next/navigation";
+import { useEffect } from "react";
 
 export default function EmployeesPage() {
   const [showForm, setShowForm] = useState(false);
   const [notification, setNotification] = useState<{ title: string; message: string } | null>(null);
   const queryClient = useQueryClient();
+  const router = useRouter();
+  const searchParams = useSearchParams();
+  const urlSearch = searchParams?.get("search") || "";
+  const [localSearch, setLocalSearch] = useState(urlSearch);
+
+  useEffect(() => {
+    setLocalSearch(urlSearch);
+  }, [urlSearch]);
+
 
   const { data: employees, isLoading } = useQuery({
     queryKey: ["employees"],
@@ -84,6 +95,18 @@ export default function EmployeesPage() {
     }
   };
 
+  const filteredEmployees = employees?.filter((emp: any) => {
+    if (!localSearch) return true;
+    const term = localSearch.toLowerCase();
+    return (
+      emp.name?.toLowerCase().includes(term) ||
+      emp.email?.toLowerCase().includes(term) ||
+      emp.department?.name?.toLowerCase().includes(term) ||
+      emp.jobTitle?.name?.toLowerCase().includes(term) ||
+      emp.businessUnit?.name?.toLowerCase().includes(term)
+    );
+  }) || [];
+
   return (
     <DashboardShell>
       <div className="flex items-center justify-between mb-8">
@@ -107,6 +130,11 @@ export default function EmployeesPage() {
             <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-[#86868B]" />
             <input
               type="text"
+              value={localSearch}
+              onChange={(e) => {
+                setLocalSearch(e.target.value);
+                router.push(`/employees?search=${encodeURIComponent(e.target.value)}`);
+              }}
               placeholder="Filter employees..."
               className="w-full bg-white border border-[#D2D2D7] rounded-full py-1.5 pl-11 pr-5 text-sm focus:outline-none focus:ring-2 focus:ring-primary/20"
             />
@@ -141,7 +169,7 @@ export default function EmployeesPage() {
                 </tr>
               </thead>
               <tbody className="divide-y divide-[#D2D2D7]">
-                {employees?.map((employee: any, i: number) => (
+                {filteredEmployees.map((employee: any, i: number) => (
                   <motion.tr
                     key={employee.id}
                     initial={{ opacity: 0, x: -10 }}
