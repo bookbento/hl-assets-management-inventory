@@ -33,8 +33,8 @@ export function SummaryCards({ stats }: SummaryCardsProps) {
       label: "Available",
       value: stats.available,
       icon: RefreshCw,
-      color: "text-emerald-600",
-      bg: "bg-emerald-50",
+      color: "text-green-600",
+      bg: "bg-green-50",
     },
     {
       label: "Maintenance",

@@ -19,10 +19,10 @@ import { motion, AnimatePresence } from "framer-motion";
 import { useSearchParams } from "next/navigation";
 
 const statusColors = {
-  [AssetStatus.AVAILABLE]: "bg-primary/10 text-primary border-primary/20",
+  [AssetStatus.AVAILABLE]: "bg-green-50 text-green-600 border-green-200",
   [AssetStatus.IN_USE]: "bg-blue-50 text-blue-600 border-blue-100",
   [AssetStatus.MAINTENANCE]: "bg-orange-50 text-orange-600 border-orange-100",
-  [AssetStatus.RETIRED]: "bg-gray-100 text-gray-600 border-gray-200",
+  [AssetStatus.RETIRED]: "bg-red-50 text-red-600 border-red-200",
 };
 
 
@@ -157,13 +157,13 @@ export function AssetTable() {
       header: () => <div className="text-right">Actions</div>,
       cell: ({ row }) => (
         <div className="flex items-center justify-end gap-2">
-          <button 
+          <button
             onClick={() => handleEdit(row.original)}
             className="p-1.5 hover:bg-gray-100 rounded-lg transition-colors text-[#86868B] hover:text-primary"
           >
             <Pencil className="w-4 h-4" />
           </button>
-          <button 
+          <button
             onClick={() => handleDelete(row.original.id)}
             disabled={deleteMutation.isPending}
             className="p-1.5 hover:bg-red-50 rounded-lg transition-colors text-[#86868B] hover:text-red-500 disabled:opacity-50"
