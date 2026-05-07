@@ -1,6 +1,8 @@
 # dependencies
 node_modules
 .pnpm-store
+**/node_modules
+**/node_modules-*
 
 # next.js
 .next/
@@ -9,6 +11,7 @@ out/
 # build
 dist/
 build/
+*.tsbuildinfo
 
 # env
 .env
@@ -16,19 +19,35 @@ build/
 .env.development.local
 .env.test.local
 .env.production.local
+.env.*.local
+**/.env
+**/.env.*
+!**/.env.example
 
 # logs
 npm-debug.log*
 yarn-debug.log*
 yarn-error.log*
 pnpm-debug.log*
+*.log
 
 # system
 .DS_Store
+Thumbs.db
 *.pem
 
+# IDE
+.vscode/*
+!.vscode/extensions.json
+!.vscode/settings.json
+!.vscode/launch.json
+.idea/
+
 # prisma
+*.db
+*.db-journal
 /backend/prisma/*.db
 /backend/prisma/*.db-journal
 
-/generated/prisma
+# testing
+/coverage
