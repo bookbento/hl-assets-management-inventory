@@ -1,17 +1,17 @@
 "use client";
 
 import { DashboardShell } from "@/components/layout/DashboardShell";
-import { Briefcase, Plus, Search, MoreHorizontal, CheckCircle, Loader2, Building } from "lucide-react";
+import { Briefcase, Plus, Search, MoreHorizontal, CheckCircle, Loader2, Building, Pencil, Trash2 } from "lucide-react";
 import { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { EmployeeForm } from "@/components/employees/EmployeeForm";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { getEmployees, createEmployee } from "@/lib/api";
+import { getEmployees, createEmployee, updateEmployee, deleteEmployee } from "@/lib/api";
 import { toast } from "react-hot-toast";
 
 export default function EmployeesPage() {
   const [showForm, setShowForm] = useState(false);
-  const [showSuccess, setShowSuccess] = useState(false);
+  const [notification, setNotification] = useState<{ title: string; message: string } | null>(null);
   const queryClient = useQueryClient();
 
   const { data: employees, isLoading } = useQuery({
@@ -24,16 +24,64 @@ export default function EmployeesPage() {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["employees"] });
       setShowForm(false);
-      setShowSuccess(true);
-      setTimeout(() => setShowSuccess(false), 3000);
+      setNotification({
+        title: "Employee Added Successfully",
+        message: "New staff profile has been registered."
+      });
+      setTimeout(() => setNotification(null), 3000);
     },
     onError: (error: any) => {
       toast.error(error.message || "Failed to create employee");
     },
   });
 
+  const [editingEmployee, setEditingEmployee] = useState<any | null>(null);
+
+  const updateMut = useMutation({
+    mutationFn: ({ id, data }: { id: string; data: any }) => updateEmployee(id, data),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["employees"] });
+      setEditingEmployee(null);
+      setNotification({
+        title: "Employee Updated",
+        message: "The employee information has been saved."
+      });
+      setTimeout(() => setNotification(null), 3000);
+    },
+    onError: (error: any) => {
+      toast.error(error.message || "Failed to update employee");
+    },
+  });
+
+  const deleteMut = useMutation({
+    mutationFn: deleteEmployee,
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["employees"] });
+      setNotification({
+        title: "Employee Deleted",
+        message: "The staff record has been removed."
+      });
+      setTimeout(() => setNotification(null), 3000);
+    },
+    onError: (error: any) => {
+      toast.error(error.message || "Failed to delete employee");
+    },
+  });
+
   const handleAddEmployee = (data: any) => {
     mutation.mutate(data);
+  };
+
+  const handleEditEmployee = (data: any) => {
+    if (editingEmployee) {
+      updateMut.mutate({ id: editingEmployee.id, data });
+    }
+  };
+
+  const handleDelete = (id: string) => {
+    if (confirm("Are you sure you want to delete this employee?")) {
+      deleteMut.mutate(id);
+    }
   };
 
   return (
@@ -146,9 +194,21 @@ export default function EmployeesPage() {
                       </span>
                     </td>
                     <td className="px-6 py-4 text-right">
-                      <button className="p-2 hover:bg-gray-100 rounded-lg transition-colors text-[#86868B]">
-                        <MoreHorizontal className="w-5 h-5" />
-                      </button>
+                      <div className="flex items-center justify-end gap-2">
+                        <button 
+                          onClick={() => setEditingEmployee(employee)}
+                          className="p-1.5 hover:bg-gray-100 rounded-lg transition-colors text-[#86868B] hover:text-primary"
+                        >
+                          <Pencil className="w-4 h-4" />
+                        </button>
+                        <button 
+                          onClick={() => handleDelete(employee.id)}
+                          disabled={deleteMut.isPending}
+                          className="p-1.5 hover:bg-red-50 rounded-lg transition-colors text-[#86868B] hover:text-red-500 disabled:opacity-50"
+                        >
+                          <Trash2 className="w-4 h-4" />
+                        </button>
+                      </div>
                     </td>
                   </motion.tr>
                 ))}
@@ -158,7 +218,7 @@ export default function EmployeesPage() {
         )}
       </div>
 
-      {/* Employee Form Modal */}
+      {/* Employee Form Modal (Create) */}
       <AnimatePresence>
         {showForm && (
           <EmployeeForm
@@ -168,9 +228,21 @@ export default function EmployeesPage() {
         )}
       </AnimatePresence>
 
+      {/* Employee Form Modal (Edit) */}
+      <AnimatePresence>
+        {editingEmployee && (
+          <EmployeeForm
+            title="Edit Employee"
+            initialData={editingEmployee}
+            onClose={() => setEditingEmployee(null)}
+            onSubmit={handleEditEmployee}
+          />
+        )}
+      </AnimatePresence>
+
       {/* Success Notification Toast */}
       <AnimatePresence>
-        {showSuccess && (
+        {notification && (
           <motion.div
             initial={{ opacity: 0, y: 100 }}
             animate={{ opacity: 1, y: 0 }}
@@ -181,8 +253,8 @@ export default function EmployeesPage() {
               <CheckCircle className="w-6 h-6 text-primary" />
             </div>
             <div className="text-left">
-              <p className="font-bold text-sm">Employee Added Successfully</p>
-              <p className="text-xs text-gray-400 font-medium">New staff profile has been registered.</p>
+              <p className="font-bold text-sm">{notification.title}</p>
+              <p className="text-xs text-gray-400 font-medium">{notification.message}</p>
             </div>
           </motion.div>
         )}

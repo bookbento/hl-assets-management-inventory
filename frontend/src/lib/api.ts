@@ -124,8 +124,41 @@ export const createEmployee = async (payload: any): Promise<any> => {
     }
     throw new Error(message);
   }
+  return res.json();
+};
+
+export const updateEmployee = async (id: string, payload: any): Promise<any> => {
+  const res = await fetch(`${API_URL}/employees/${id}`, {
+    method: "PATCH",
+    headers: {
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify(payload),
+  });
+
+  if (!res.ok) {
+    let message = "Failed to update employee";
+    try {
+      const errorData = await res.json();
+      if (errorData?.message) {
+        message = Array.isArray(errorData.message) ? errorData.message.join(", ") : errorData.message;
+      }
+    } catch {
+      // Fallback
+    }
+    throw new Error(message);
+  }
 
   return res.json();
+};
+
+export const deleteEmployee = async (id: string): Promise<void> => {
+  const res = await fetch(`${API_URL}/employees/${id}`, {
+    method: "DELETE",
+  });
+  if (!res.ok) {
+    throw new Error("Failed to delete employee");
+  }
 };
 
 export const login = async (credentials: any): Promise<{ access_token: string }> => {

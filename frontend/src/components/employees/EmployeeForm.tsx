@@ -3,7 +3,7 @@
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
-import { X, UserPlus, Mail, Briefcase, Building, Layers, Loader2, AlertCircle } from 'lucide-react';
+import { X, UserPlus, Mail, Briefcase, Building, Layers, Loader2, AlertCircle, ChevronDown } from 'lucide-react';
 import { motion } from 'framer-motion';
 import { cn } from '@/lib/utils';
 import { useQuery } from '@tanstack/react-query';
@@ -175,19 +175,31 @@ export function EmployeeForm({ onClose, onSubmit, initialData }: EmployeeFormPro
                                     </button>
                                 </div>
                             )}
-                            <select
-                                {...register('businessUnitId')}
-                                className={cn(
-                                    "w-full bg-gray-50 border border-gray-200 rounded-lg px-4 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all appearance-none",
-                                    errors.businessUnitId && "border-red-500"
-                                )}
-                                disabled={isLoadingOrg || isOrgError}
-                            >
-                                <option value="">Select Business Unit...</option>
-                                {orgHierarchy.map((bu) => (
-                                    <option key={bu.id} value={bu.id}>{bu.name}</option>
-                                ))}
-                            </select>
+
+                            <div className="relative">
+                                <select
+                                    {...register('businessUnitId')}
+                                    className={cn(
+                                        "w-full bg-gray-50 border rounded-lg px-4 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all appearance-none",
+
+                                        watch('businessUnitId')
+                                            ? "text-gray-900 border-gray-200"
+                                            : "text-gray-400 border-gray-200",
+
+                                        errors.businessUnitId && "border-red-500"
+                                    )}
+                                    disabled={isLoadingOrg || isOrgError}
+                                >
+                                    <option value="">Select Business Unit</option>
+
+                                    {orgHierarchy.map((bu) => (
+                                        <option key={bu.id} value={bu.id}>
+                                            {bu.name}
+                                        </option>
+                                    ))}
+                                </select>
+                                <ChevronDown className="w-4 h-4 absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none" />
+                            </div>
                             {errors.businessUnitId && <p className="mt-1 text-xs text-red-500 font-medium">{errors.businessUnitId.message}</p>}
                         </div>
 
@@ -196,38 +208,68 @@ export function EmployeeForm({ onClose, onSubmit, initialData }: EmployeeFormPro
                                 <label className="block text-[10px] font-bold uppercase tracking-wider text-gray-400 mb-1.5 flex items-center gap-2">
                                     <Building className="w-3 h-3" /> Department
                                 </label>
-                                <select
-                                    {...register('departmentId')}
-                                    className={cn(
-                                        "w-full bg-gray-50 border border-gray-200 rounded-lg px-4 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all appearance-none",
-                                        errors.departmentId && "border-red-500"
-                                    )}
-                                    disabled={!selectedBUId || isLoadingOrg || isOrgError}
-                                >
-                                    <option value="">Select Department...</option>
-                                    {departments.map((dept) => (
-                                        <option key={dept.id} value={dept.id}>{dept.name}</option>
-                                    ))}
-                                </select>
+                                <div className="relative">
+                                    <select
+                                        {...register('departmentId')}
+                                        className={cn(
+                                            "w-full rounded-lg px-4 py-2 text-sm transition-all appearance-none",
+                                            selectedBUId
+                                                ? "bg-gray-50 border border-gray-200 focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary"
+                                                : "bg-gray-100 border border-gray-100 text-gray-400 cursor-not-allowed",
+
+                                            watch("departmentId")
+                                                ? "text-gray-900 border-gray-200"
+                                                : "text-gray-400 border-gray-200",
+
+                                            errors.departmentId && "border-red-500"
+                                        )}
+                                        disabled={!selectedBUId || isLoadingOrg || isOrgError}
+                                    >
+                                        {selectedBUId ? (
+                                            <option value="">Select Department</option>
+                                        ) : (
+                                            <option value=""> </option>
+                                        )}
+                                        {departments.map((dept) => (
+                                            <option key={dept.id} value={dept.id}>{dept.name}</option>
+                                        ))}
+                                    </select>
+                                    <ChevronDown className="w-4 h-4 absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none" />
+                                </div>
                                 {errors.departmentId && <p className="mt-1 text-xs text-red-500 font-medium">{errors.departmentId.message}</p>}
                             </div>
                             <div>
                                 <label className="block text-[10px] font-bold uppercase tracking-wider text-gray-400 mb-1.5 flex items-center gap-2">
                                     <Briefcase className="w-3 h-3" /> Job Title
                                 </label>
-                                <select
-                                    {...register('jobTitleId')}
-                                    className={cn(
-                                        "w-full bg-gray-50 border border-gray-200 rounded-lg px-4 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all appearance-none",
-                                        errors.jobTitleId && "border-red-500"
-                                    )}
-                                    disabled={!selectedDeptId || isLoadingOrg || isOrgError}
-                                >
-                                    <option value="">Select Job Title...</option>
-                                    {jobTitles.map((jt) => (
-                                        <option key={jt.id} value={jt.id}>{jt.name}</option>
-                                    ))}
-                                </select>
+                                <div className="relative">
+                                    <select
+                                        {...register('jobTitleId')}
+                                        className={cn(
+                                            "w-full rounded-lg px-4 py-2 text-sm transition-all appearance-none",
+                                            selectedDeptId
+                                                ? "bg-gray-50 border border-gray-200 focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary"
+                                                : "bg-gray-100 border border-gray-100 text-gray-400 cursor-not-allowed",
+
+                                            watch("jobTitleId")
+                                                ? "text-gray-900 border-gray-200"
+                                                : "text-gray-400 border-gray-200",
+
+                                            errors.jobTitleId && "border-red-500"
+                                        )}
+                                        disabled={!selectedDeptId || isLoadingOrg || isOrgError}
+                                    >
+                                        {selectedDeptId ? (
+                                            <option value="">Select Job Title</option>
+                                        ) : (
+                                            <option value=""> </option>
+                                        )}
+                                        {jobTitles.map((jt) => (
+                                            <option key={jt.id} value={jt.id}>{jt.name}</option>
+                                        ))}
+                                    </select>
+                                    <ChevronDown className="w-4 h-4 absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none" />
+                                </div>
                                 {errors.jobTitleId && <p className="mt-1 text-xs text-red-500 font-medium">{errors.jobTitleId.message}</p>}
                             </div>
                         </div>
@@ -246,7 +288,7 @@ export function EmployeeForm({ onClose, onSubmit, initialData }: EmployeeFormPro
                             disabled={isSubmitting}
                             className="flex-[2] btn-primary"
                         >
-                            {isSubmitting ? 'Creating...' : 'Create Employee'}
+                            {isSubmitting ? 'Creating...' : 'Save Employee'}
                         </button>
                     </div>
                 </form>
