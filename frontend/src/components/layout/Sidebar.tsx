@@ -10,7 +10,7 @@ import {
   ChevronRight,
 } from "lucide-react";
 import Link from "next/link";
-import { usePathname } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 import { cn } from "@/lib/mockups/utils";
 
 const sidebarItems = [
@@ -27,6 +27,12 @@ interface SidebarProps {
 
 export function Sidebar({ className, isDrawer = false }: SidebarProps) {
   const pathname = usePathname();
+  const router = useRouter();
+
+  const handleLogout = () => {
+    localStorage.removeItem('isAuthenticated');
+    router.push('/login');
+  };
 
   return (
     <div className={cn(
@@ -46,7 +52,7 @@ export function Sidebar({ className, isDrawer = false }: SidebarProps) {
           "font-bold text-xl tracking-tight text-[#1D1D1F] transition-opacity duration-300",
           !isDrawer && "md:hidden lg:block"
         )}>
-          SM IT
+          IT AM
         </span>
       </div>
 
@@ -81,10 +87,12 @@ export function Sidebar({ className, isDrawer = false }: SidebarProps) {
       </nav>
 
       <div className="p-4 border-t border-[#D2D2D7]">
-        <div className={cn(
-          "flex items-center gap-3 px-2 py-3 rounded-xl hover:bg-gray-50 transition-colors cursor-pointer group overflow-hidden",
-          !isDrawer && "md:justify-center lg:justify-start"
-        )}>
+        <div
+          onClick={handleLogout}
+          className={cn(
+            "flex items-center gap-3 px-2 py-3 rounded-xl hover:bg-gray-50 transition-colors cursor-pointer group overflow-hidden",
+            !isDrawer && "md:justify-center lg:justify-start"
+          )}>
           <div className="w-9 h-9 rounded-full bg-gradient-to-tr from-gray-200 to-gray-300 flex items-center justify-center text-xs font-bold text-[#1D1D1F] border border-[#D2D2D7] shrink-0">
             AD
           </div>
