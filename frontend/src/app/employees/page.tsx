@@ -1,19 +1,23 @@
 "use client";
 
 import { DashboardShell } from "@/components/layout/DashboardShell";
-import { Briefcase, Plus, Search, MoreHorizontal, CheckCircle, Loader2, Building, Pencil, Trash2 } from "lucide-react";
-import { useState } from "react";
+import { Briefcase, Plus, Search, FileDown, CheckCircle, Loader2, Building, Pencil, Trash2 } from "lucide-react";
+import { useState, useRef } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { EmployeeForm } from "@/components/employees/EmployeeForm";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { getEmployees, createEmployee, updateEmployee, deleteEmployee } from "@/lib/api";
+import { getEmployees, createEmployee, updateEmployee, deleteEmployee, getBusinessUnits } from "@/lib/api";
 import { toast } from "react-hot-toast";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useEffect } from "react";
+import Papa from "papaparse";
 
 export default function EmployeesPage() {
   const [showForm, setShowForm] = useState(false);
   const [notification, setNotification] = useState<{ title: string; message: string } | null>(null);
+  const [isImporting, setIsImporting] = useState(false);
+  const fileInputRef = useRef<HTMLInputElement>(null);
+  
   const queryClient = useQueryClient();
   const router = useRouter();
   const searchParams = useSearchParams();
@@ -95,6 +99,59 @@ export default function EmployeesPage() {
     }
   };
 
+  const handleImport = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    setIsImporting(true);
+    Papa.parse(file, {
+      header: true,
+      skipEmptyLines: true,
+      complete: async (results) => {
+        const rows = results.data as any[];
+        let successCount = 0;
+        let failCount = 0;
+
+        toast.loading(`Importing ${rows.length} employees...`, { id: 'import-loading' });
+
+        // Get BU/Dept data to match names if needed, or assume ID is provided in CSV
+        // For simplicity, we'll assume the CSV has: name, email, businessUnitId, departmentId, jobTitleId
+        
+        for (const row of rows) {
+          try {
+            await createEmployee({
+              name: row.name,
+              email: row.email,
+              businessUnitId: row.businessUnitId,
+              departmentId: row.departmentId,
+              jobTitleId: row.jobTitleId,
+            });
+            successCount++;
+          } catch (err) {
+            console.error("Failed to import row:", row, err);
+            failCount++;
+          }
+        }
+
+        toast.dismiss('import-loading');
+        queryClient.invalidateQueries({ queryKey: ["employees"] });
+        
+        if (failCount === 0) {
+          toast.success(`Successfully imported ${successCount} employees`);
+        } else {
+          toast.success(`Import finished: ${successCount} success, ${failCount} failed`);
+        }
+        
+        setIsImporting(false);
+        if (fileInputRef.current) fileInputRef.current.value = "";
+      },
+      error: (error) => {
+        toast.error("Error parsing CSV file");
+        setIsImporting(false);
+      }
+    });
+  };
+
   const filteredEmployees = employees?.filter((emp: any) => {
     if (!localSearch) return true;
     const term = localSearch.toLowerCase();
@@ -116,12 +173,29 @@ export default function EmployeesPage() {
             Manage staff access and equipment assignments.
           </p>
         </div>
-        <button
-          className="btn-primary flex items-center gap-2"
-          onClick={() => setShowForm(true)}>
-          <Plus className="w-4 h-4" />
-          <span>Add Employee</span>
-        </button>
+        <div className="flex gap-3">
+          <input
+            type="file"
+            ref={fileInputRef}
+            onChange={handleImport}
+            accept=".csv"
+            className="hidden"
+          />
+          <button 
+            onClick={() => fileInputRef.current?.click()}
+            disabled={isImporting}
+            className="flex items-center gap-2 px-4 py-2 border border-[#D2D2D7] bg-white rounded-lg text-sm font-medium hover:bg-gray-50 transition-colors shadow-sm active:scale-95 disabled:opacity-50"
+          >
+            {isImporting ? <Loader2 className="w-4 h-4 animate-spin" /> : <FileDown className="w-4 h-4" />}
+            <span>{isImporting ? "Importing..." : "Import Employee"}</span>
+          </button>
+          <button
+            className="btn-primary flex items-center gap-2"
+            onClick={() => setShowForm(true)}>
+            <Plus className="w-4 h-4" />
+            <span>Add Employee</span>
+          </button>
+        </div>
       </div>
 
       <div className="apple-card overflow-hidden bg-white min-h-[400px] flex flex-col">
@@ -223,13 +297,13 @@ export default function EmployeesPage() {
                     </td>
                     <td className="px-6 py-4 text-right">
                       <div className="flex items-center justify-end gap-2">
-                        <button 
+                        <button
                           onClick={() => setEditingEmployee(employee)}
                           className="p-1.5 hover:bg-gray-100 rounded-lg transition-colors text-[#86868B] hover:text-primary"
                         >
                           <Pencil className="w-4 h-4" />
                         </button>
-                        <button 
+                        <button
                           onClick={() => handleDelete(employee.id)}
                           disabled={deleteMut.isPending}
                           className="p-1.5 hover:bg-red-50 rounded-lg transition-colors text-[#86868B] hover:text-red-500 disabled:opacity-50"
