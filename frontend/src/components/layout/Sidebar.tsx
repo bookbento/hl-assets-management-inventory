@@ -7,17 +7,18 @@ import {
   Users,
   Settings,
   LogOut,
-  ChevronRight,
 } from "lucide-react";
 import Link from "next/link";
-import { usePathname, useRouter } from "next/navigation";
+import { usePathname } from "next/navigation";
+import { signOut, useSession } from "next-auth/react";
 import { cn } from "@/lib/mockups/utils";
+import { useMemo } from "react";
 
 const sidebarItems = [
-  { label: "Dashboard", icon: LayoutDashboard, href: "/" },
-  { label: "Assets", icon: Package, href: "/assets" },
-  { label: "Employees", icon: Users, href: "/employees" },
-  { label: "Settings", icon: Settings, href: "/settings" },
+  { label: "Dashboard", icon: LayoutDashboard, href: "/", roles: ["admin", "user"] },
+  { label: "Assets", icon: Package, href: "/assets", roles: ["admin", "user"] },
+  { label: "Employees", icon: Users, href: "/employees", roles: ["admin"] },
+  { label: "Settings", icon: Settings, href: "/settings", roles: ["admin"] },
 ];
 
 interface SidebarProps {
@@ -27,11 +28,17 @@ interface SidebarProps {
 
 export function Sidebar({ className, isDrawer = false }: SidebarProps) {
   const pathname = usePathname();
-  const router = useRouter();
+  const { data: session } = useSession();
+  const role = (session as any)?.user?.role || "user";
+  const username = (session as any)?.user?.username || "User";
+
+  const visibleItems = useMemo(
+    () => sidebarItems.filter((item) => item.roles.includes(role)),
+    [role],
+  );
 
   const handleLogout = () => {
-    localStorage.removeItem('isAuthenticated');
-    router.push('/login');
+    signOut({ callbackUrl: "/login" });
   };
 
   return (
@@ -57,7 +64,7 @@ export function Sidebar({ className, isDrawer = false }: SidebarProps) {
       </div>
 
       <nav className="flex-1 px-4 space-y-1">
-        {sidebarItems.map((item) => (
+        {visibleItems.map((item) => (
           <Link
             key={item.href}
             href={item.href}
@@ -94,17 +101,22 @@ export function Sidebar({ className, isDrawer = false }: SidebarProps) {
             !isDrawer && "md:justify-center lg:justify-start"
           )}>
           <div className="w-9 h-9 rounded-full bg-gradient-to-tr from-gray-200 to-gray-300 flex items-center justify-center text-xs font-bold text-[#1D1D1F] border border-[#D2D2D7] shrink-0">
-            AD
+            {(username || "User")
+              .split(" ")
+              .map((part: string) => part[0])
+              .slice(0, 2)
+              .join("")
+              .toUpperCase()}
           </div>
           <div className={cn(
             "flex-1 overflow-hidden text-left transition-opacity duration-300",
             !isDrawer && "md:hidden lg:block"
           )}>
             <p className="text-sm font-semibold truncate text-[#1D1D1F]">
-              Admin User
+              {username}
             </p>
             <p className="text-[11px] text-[#86868B] truncate font-bold uppercase tracking-wide">
-              IT Architect
+              {role}
             </p>
           </div>
           <LogOut className={cn(

@@ -27,9 +27,10 @@ interface EmployeeFormProps {
     onClose: () => void;
     onSubmit: (data: EmployeeFormValues) => void;
     initialData?: Partial<EmployeeFormValues>;
+    title?: string;
 }
 
-export function EmployeeForm({ onClose, onSubmit, initialData }: EmployeeFormProps) {
+export function EmployeeForm({ onClose, onSubmit, initialData, title = 'Add New Employee' }: EmployeeFormProps) {
     const {
         data: orgHierarchy = [],
         isLoading: isLoadingOrg,
@@ -103,7 +104,7 @@ export function EmployeeForm({ onClose, onSubmit, initialData }: EmployeeFormPro
                 className="relative w-full max-w-lg bg-white rounded-apple-lg shadow-2xl overflow-hidden"
             >
                 <div className="px-6 py-4 border-b border-gray-100 flex items-center justify-between bg-gray-50/50">
-                    <h3 className="text-lg font-bold">Add New Employee</h3>
+                    <h3 className="text-lg font-bold">{title}</h3>
                     <button onClick={onClose} className="p-2 hover:bg-gray-200 rounded-full transition-colors">
                         <X className="w-5 h-5 text-gray-500" />
                     </button>

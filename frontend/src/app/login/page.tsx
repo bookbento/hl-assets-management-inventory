@@ -1,13 +1,14 @@
 'use client';
 
 import { useState } from "react";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import { motion } from "framer-motion";
 import { Shield, Lock, User, ArrowRight } from "lucide-react";
 import { signIn } from "next-auth/react";
 
 export default function LoginPage() {
     const router = useRouter();
+    const searchParams = useSearchParams();
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState('');
     const [formData, setFormData] = useState({
@@ -31,7 +32,8 @@ export default function LoginPage() {
                 setError('Invalid username or password');
                 setLoading(false);
             } else {
-                router.push('/');
+                const callbackUrl = searchParams.get('callbackUrl') || '/';
+                router.push(callbackUrl);
                 router.refresh();
             }
         } catch (err: any) {

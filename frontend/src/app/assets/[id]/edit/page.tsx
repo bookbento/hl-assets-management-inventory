@@ -2,11 +2,13 @@
 'use client';
 
 import AssetForm from '@/components/assets/AssetForm';
+import type { AssetFormValues } from '@/components/assets/AssetForm';
 import { useRouter, useParams } from 'next/navigation';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { getAssetById, updateAsset } from '@/lib/api';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { toast } from 'react-hot-toast';
+import { DashboardShell } from '@/components/layout/DashboardShell';
 
 export default function EditAssetPage() {
   const router = useRouter();
@@ -53,28 +55,33 @@ export default function EditAssetPage() {
 
   // Format dates for the form (YYYY-MM-DD)
   const initialData = {
-    ...asset,
+    name: asset.name,
+    serialNumber: asset.serialNumber,
+    category: asset.category as AssetFormValues["category"],
+    status: asset.status as AssetFormValues["status"],
     purchaseDate: asset.purchaseDate ? new Date(asset.purchaseDate).toISOString().split('T')[0] : '',
     warrantyExpiry: asset.warrantyExpiry ? new Date(asset.warrantyExpiry).toISOString().split('T')[0] : '',
   };
 
   return (
-    <div className="space-y-6">
-      <h1 className="text-3xl font-bold text-gray-900">Edit Asset</h1>
-      <Card className="border-none shadow-apple-sm">
-        <CardHeader>
-          <CardTitle>Asset Details</CardTitle>
-        </CardHeader>
-        <CardContent>
-          <AssetForm 
-            initialData={initialData} 
-            onSubmit={handleSubmit} 
-            onClose={handleCancel}
-            isModal={false}
-            title="Edit Asset Details"
-          />
-        </CardContent>
-      </Card>
-    </div>
+    <DashboardShell>
+      <div className="space-y-6">
+        <h1 className="text-3xl font-bold text-gray-900">Edit Asset</h1>
+        <Card className="border-none shadow-apple-sm">
+          <CardHeader>
+            <CardTitle>Asset Details</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <AssetForm 
+              initialData={initialData} 
+              onSubmit={handleSubmit} 
+              onClose={handleCancel}
+              isModal={false}
+              title="Edit Asset Details"
+            />
+          </CardContent>
+        </Card>
+      </div>
+    </DashboardShell>
   );
 }

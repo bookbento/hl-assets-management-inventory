@@ -5,11 +5,10 @@ import {
   ColumnDef,
   flexRender,
   getCoreRowModel,
-  getPaginationRowModel,
   useReactTable,
 } from "@tanstack/react-table";
 import { Loader2, Pencil, Trash2, CheckCircle } from "lucide-react";
-import { Asset, AssetStatus, AssetCategory } from "@/lib/mockups/types";
+import { AssetStatus, AssetCategory } from "@/lib/mockups/types";
 import { cn } from "@/lib/mockups/utils";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { getAssets, deleteAsset, updateAsset } from "@/lib/api";
@@ -17,6 +16,26 @@ import { toast } from "react-hot-toast";
 import { AssetForm, AssetFormValues } from "./AssetForm";
 import { motion, AnimatePresence } from "framer-motion";
 import { useSearchParams } from "next/navigation";
+
+type AssetRow = {
+  id: string;
+  name: string;
+  serialNumber: string;
+  category: AssetCategory;
+  status: AssetStatus;
+  assignedTo?: string | null;
+  purchaseDate?: string | Date | null;
+  warrantyExpiry?: string | Date | null;
+  user?: { name?: string | null } | null;
+};
+
+type AssetsResponse = {
+  data: AssetRow[];
+  total: number;
+  page: number;
+  limit: number;
+  totalPages: number;
+};
 
 const statusColors = {
   [AssetStatus.AVAILABLE]: "bg-green-50 text-green-600 border-green-200",
@@ -53,7 +72,7 @@ export function AssetTable() {
   const limit = 10;
 
   const [notification, setNotification] = React.useState<{ title: string; message: string } | null>(null);
-  const [editingAsset, setEditingAsset] = React.useState<Asset | null>(null);
+  const [editingAsset, setEditingAsset] = React.useState<AssetRow | null>(null);
   const [formInitialData, setFormInitialData] = React.useState<Partial<AssetFormValues> | null>(null);
 
   // --- Delete Logic ---
@@ -79,7 +98,8 @@ export function AssetTable() {
   };
 
   const updateMutation = useMutation({
-    mutationFn: ({ id, data }: { id: string; data: Partial<AssetFormValues> }) => updateAsset(id, data),
+    mutationFn: ({ id, data }: { id: string; data: Partial<AssetFormValues> }) =>
+      updateAsset(id, data as any),
     onSuccess: () => {
       setNotification({
         title: "Asset Updated",
@@ -95,9 +115,13 @@ export function AssetTable() {
     },
   });
 
-  const handleEdit = (asset: Asset) => {
+  const handleEdit = (asset: AssetRow) => {
     const formattedData: Partial<AssetFormValues> = {
-      ...asset,
+      name: asset.name,
+      serialNumber: asset.serialNumber,
+      category: asset.category as AssetFormValues["category"],
+      status: asset.status as AssetFormValues["status"],
+      assignedTo: asset.assignedTo ?? undefined,
       // Ensure dates are in YYYY-MM-DD format for input type="date"
       purchaseDate: asset.purchaseDate ? new Date(asset.purchaseDate).toISOString().split('T')[0] : '',
       warrantyExpiry: asset.warrantyExpiry ? new Date(asset.warrantyExpiry).toISOString().split('T')[0] : '',
@@ -106,7 +130,7 @@ export function AssetTable() {
     setEditingAsset(asset);
   };
 
-  const columns = React.useMemo<ColumnDef<Asset>[]>(() => [
+  const columns = React.useMemo<ColumnDef<AssetRow>[]>(() => [
     {
       accessorKey: "name",
       header: "Asset Name",
@@ -195,9 +219,9 @@ export function AssetTable() {
       ),
     },
   ], [deleteMutation.isPending]);
-  const { data, isLoading, error } = useQuery({
+  const { data, isLoading, error } = useQuery<AssetsResponse>({
     queryKey: ["assets", { page, limit, search }],
-    queryFn: () => getAssets({ page, limit, search }),
+    queryFn: async () => (await getAssets({ page, limit, search })) as unknown as AssetsResponse,
   });
 
   const table = useReactTable({
