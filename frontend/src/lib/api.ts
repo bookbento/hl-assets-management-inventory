@@ -1,7 +1,19 @@
 // frontend/src/lib/api.ts
 import { Asset, AssetCategory, AssetStatus } from "@prisma/client";
+import { getSession } from "next-auth/react";
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:3001";
+
+const authenticatedFetch = async (url: string, options: RequestInit = {}) => {
+  const session: any = await getSession();
+  const headers = new Headers(options.headers || {});
+
+  if (session?.access_token) {
+    headers.set("Authorization", `Bearer ${session.access_token}`);
+  }
+
+  return fetch(url, { ...options, headers });
+};
 
 export interface AssetsQuery {
   search?: string;
@@ -31,7 +43,7 @@ export const getAssets = async (query: AssetsQuery = {}): Promise<PaginatedRespo
   if (query.page) params.append("page", query.page.toString());
   if (query.limit) params.append("limit", query.limit.toString());
 
-  const res = await fetch(`${API_URL}/assets?${params.toString()}`);
+  const res = await authenticatedFetch(`${API_URL}/assets?${params.toString()}`);
   if (!res.ok) {
     throw new Error("Failed to fetch assets");
   }
@@ -39,7 +51,7 @@ export const getAssets = async (query: AssetsQuery = {}): Promise<PaginatedRespo
 };
 
 export const getAssetById = async (id: string): Promise<Asset> => {
-  const res = await fetch(`${API_URL}/assets/${id}`);
+  const res = await authenticatedFetch(`${API_URL}/assets/${id}`);
   if (!res.ok) {
     throw new Error("Failed to fetch asset");
   }
@@ -47,7 +59,7 @@ export const getAssetById = async (id: string): Promise<Asset> => {
 };
 
 export const createAsset = async (assetData: Omit<Asset, "id" | "createdAt" | "updatedAt">): Promise<Asset> => {
-  const res = await fetch(`${API_URL}/assets`, {
+  const res = await authenticatedFetch(`${API_URL}/assets`, {
     method: 'POST',
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify(assetData),
@@ -59,7 +71,7 @@ export const createAsset = async (assetData: Omit<Asset, "id" | "createdAt" | "u
 };
 
 export const updateAsset = async (id: string, assetData: Partial<Omit<Asset, "id" | "createdAt" | "updatedAt">>): Promise<Asset> => {
-  const res = await fetch(`${API_URL}/assets/${id}`, {
+  const res = await authenticatedFetch(`${API_URL}/assets/${id}`, {
     method: 'PATCH',
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify(assetData),
@@ -71,7 +83,7 @@ export const updateAsset = async (id: string, assetData: Partial<Omit<Asset, "id
 };
 
 export const deleteAsset = async (id: string): Promise<void> => {
-  const res = await fetch(`${API_URL}/assets/${id}`, {
+  const res = await authenticatedFetch(`${API_URL}/assets/${id}`, {
     method: 'DELETE',
   });
   if (!res.ok) {
@@ -80,7 +92,7 @@ export const deleteAsset = async (id: string): Promise<void> => {
 };
 
 export const getAssetSummary = async (): Promise<any> => {
-  const res = await fetch(`${API_URL}/assets/summary`);
+  const res = await authenticatedFetch(`${API_URL}/assets/summary`);
   if (!res.ok) {
     throw new Error("Failed to fetch asset summary");
   }
@@ -88,7 +100,7 @@ export const getAssetSummary = async (): Promise<any> => {
 };
 
 export const getEmployees = async (): Promise<any[]> => {
-  const res = await fetch(`${API_URL}/employees`);
+  const res = await authenticatedFetch(`${API_URL}/employees`);
   if (!res.ok) {
     throw new Error("Failed to fetch employees");
   }
@@ -96,7 +108,7 @@ export const getEmployees = async (): Promise<any[]> => {
 };
 
 export const getBusinessUnits = async (): Promise<any[]> => {
-  const res = await fetch(`${API_URL}/business-unit`);
+  const res = await authenticatedFetch(`${API_URL}/business-unit`);
   if (!res.ok) {
     throw new Error("Failed to fetch organizational structure");
   }
@@ -104,7 +116,7 @@ export const getBusinessUnits = async (): Promise<any[]> => {
 };
 
 export const createEmployee = async (payload: any): Promise<any> => {
-  const res = await fetch(`${API_URL}/employees`, {
+  const res = await authenticatedFetch(`${API_URL}/employees`, {
     method: "POST",
     headers: {
       "Content-Type": "application/json",
@@ -128,7 +140,7 @@ export const createEmployee = async (payload: any): Promise<any> => {
 };
 
 export const updateEmployee = async (id: string, payload: any): Promise<any> => {
-  const res = await fetch(`${API_URL}/employees/${id}`, {
+  const res = await authenticatedFetch(`${API_URL}/employees/${id}`, {
     method: "PATCH",
     headers: {
       "Content-Type": "application/json",
@@ -153,7 +165,7 @@ export const updateEmployee = async (id: string, payload: any): Promise<any> => 
 };
 
 export const deleteEmployee = async (id: string): Promise<void> => {
-  const res = await fetch(`${API_URL}/employees/${id}`, {
+  const res = await authenticatedFetch(`${API_URL}/employees/${id}`, {
     method: "DELETE",
   });
   if (!res.ok) {

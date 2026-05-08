@@ -3,7 +3,7 @@
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
-import { AssetCategory, AssetStatus } from '@prisma/client';
+import { AssetCategory, AssetStatus } from '@/lib/mockups/types';
 import { X, Upload, Info } from 'lucide-react';
 import { motion } from 'framer-motion';
 import { cn } from '@/lib/utils';
@@ -29,12 +29,12 @@ interface AssetFormProps {
     isModal?: boolean;
 }
 
-export function AssetForm({ 
-    onClose, 
-    onSubmit, 
-    initialData, 
+export function AssetForm({
+    onClose,
+    onSubmit,
+    initialData,
     title = "Add New Asset",
-    isModal = true 
+    isModal = true
 }: AssetFormProps) {
     const {
         register,

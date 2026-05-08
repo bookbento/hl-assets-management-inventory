@@ -8,14 +8,14 @@ const handler = NextAuth({
     CredentialsProvider({
       name: "Credentials",
       credentials: {
-        email: { label: "Email", type: "email", placeholder: "jsmith@example.com" },
+        username: { label: "Username", type: "text", placeholder: "admin" },
         password: { label: "Password", type: "password" }
       },
       async authorize (credentials, req) {
         if (!credentials) return null;
         try {
           const user = await login({
-            email: credentials.email,
+            username: credentials.username,
             password: credentials.password,
           });
           // The backend returns an object with access_token
@@ -25,7 +25,7 @@ const handler = NextAuth({
             // For simplicity, returning a minimal user object with the token
             return {
               id: 'user-id-from-token', // This would ideally come from decoded token or user profile
-              email: credentials.email,
+              username: credentials.username,
               access_token: user.access_token
             };
           }

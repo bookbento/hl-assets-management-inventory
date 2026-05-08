@@ -4,6 +4,7 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { motion } from "framer-motion";
 import { Shield, Lock, User, ArrowRight } from "lucide-react";
+import { signIn } from "next-auth/react";
 
 export default function LoginPage() {
     const router = useRouter();
@@ -19,16 +20,24 @@ export default function LoginPage() {
         setLoading(true);
         setError('');
 
-        // Demo authentication logic
-        setTimeout(() => {
-            if (formData.username === 'admin' && formData.password === 'password') {
-                localStorage.setItem('isAuthenticated', 'true');
-                router.push('/');
-            } else {
+        try {
+            const result = await signIn('credentials', {
+                redirect: false,
+                username: formData.username,
+                password: formData.password,
+            });
+
+            if (result?.error) {
                 setError('Invalid username or password');
                 setLoading(false);
+            } else {
+                router.push('/');
+                router.refresh();
             }
-        }, 1000);
+        } catch (err: any) {
+            setError('An unexpected error occurred. Please try again.');
+            setLoading(false);
+        }
     };
 
     return (

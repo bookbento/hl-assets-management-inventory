@@ -1,8 +1,10 @@
-import { Controller, Get, Post, Body, Patch, Param, Delete } from '@nestjs/common';
+import { Controller, Get, Post, Body, Patch, Param, Delete, UseGuards } from '@nestjs/common';
+import { JwtAuthGuard } from '../auth/jwt-auth.guard';
 import { DepartmentService } from './department.service';
 import { CreateDepartmentDto, UpdateDepartmentDto } from './dto/department.dto';
 
 @Controller('department')
+@UseGuards(JwtAuthGuard)
 export class DepartmentController {
   constructor(private readonly departmentService: DepartmentService) {}
 

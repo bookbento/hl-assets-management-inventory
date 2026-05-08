@@ -7,6 +7,7 @@ import { Roles } from '../auth/roles.decorator';
 import { Role } from '@prisma/client';
 
 @Controller('assets')
+@UseGuards(JwtAuthGuard)
 export class AssetController {
   constructor(private readonly assetService: AssetService) {}
 

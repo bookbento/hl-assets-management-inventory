@@ -9,7 +9,7 @@ import {
   useReactTable,
 } from "@tanstack/react-table";
 import { Loader2, Pencil, Trash2, CheckCircle } from "lucide-react";
-import { Asset, AssetStatus } from "@prisma/client";
+import { Asset, AssetStatus } from "@/lib/mockups/types";
 import { cn } from "@/lib/mockups/utils";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { getAssets, deleteAsset, updateAsset } from "@/lib/api";
