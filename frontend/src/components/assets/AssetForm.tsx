@@ -19,6 +19,23 @@ const assetSchema = z.object({
     warrantyExpiry: z.string().min(1, 'Warranty expiry is required'),
 });
 
+const categoryLabels = {
+    [AssetCategory.LAPTOP]: 'Laptop',
+    [AssetCategory.MONITOR]: 'Monitor',
+    [AssetCategory.PERIPHERAL]: 'Peripheral',
+    [AssetCategory.NETWORKING]: 'Networking',
+    [AssetCategory.MOBILE]: 'Mobile',
+    [AssetCategory.OTHER]: 'Other',
+};
+
+const statusLabels = {
+    [AssetStatus.AVAILABLE]: 'Available',
+    [AssetStatus.IN_USE]: 'In Use',
+    [AssetStatus.MAINTENANCE]: 'Maintenance',
+    [AssetStatus.RETIRED]: 'Retired',
+};
+
+
 export type AssetFormValues = z.infer<typeof assetSchema>;
 
 interface AssetFormProps {
@@ -104,7 +121,7 @@ export function AssetForm({
                                 className="w-full bg-gray-50 border border-gray-200 rounded-lg px-4 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all appearance-none"
                             >
                                 {Object.values(AssetCategory).map((cat) => (
-                                    <option key={cat} value={cat}>{cat}</option>
+                                    <option key={cat} value={cat}>{categoryLabels[cat]}</option>
                                 ))}
                             </select>
                         </div>
@@ -116,7 +133,7 @@ export function AssetForm({
                                 className="w-full bg-gray-50 border border-gray-200 rounded-lg px-4 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all appearance-none"
                             >
                                 {Object.values(AssetStatus).map((status) => (
-                                    <option key={status} value={status}>{status}</option>
+                                    <option key={status} value={status}>{statusLabels[status]}</option>
                                 ))}
                             </select>
                         </div>

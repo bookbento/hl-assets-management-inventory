@@ -1,18 +1,18 @@
 export enum AssetCategory {
-    LAPTOP = 'Laptop',
-    MONITOR = 'Monitor',
-    PERIPHERAL = 'Peripheral',
-    NETWORKING = 'Networking',
-    MOBILE = 'Mobile',
-    OTHER = 'Other',
-  }
+  LAPTOP = 'LAPTOP',
+  MONITOR = 'MONITOR',
+  PERIPHERAL = 'PERIPHERAL',
+  NETWORKING = 'NETWORKING',
+  MOBILE = 'MOBILE',
+  OTHER = 'OTHER',
+}
   
   export enum AssetStatus {
-    AVAILABLE = 'Available',
-    IN_USE = 'In Use',
-    MAINTENANCE = 'Maintenance',
-    RETIRED = 'Retired',
-  }
+  AVAILABLE = 'AVAILABLE',
+  IN_USE = 'IN_USE',
+  MAINTENANCE = 'MAINTENANCE',
+  RETIRED = 'RETIRED',
+}
   
   export interface User {
     id: string;

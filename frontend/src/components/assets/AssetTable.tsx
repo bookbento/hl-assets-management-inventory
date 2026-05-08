@@ -9,7 +9,7 @@ import {
   useReactTable,
 } from "@tanstack/react-table";
 import { Loader2, Pencil, Trash2, CheckCircle } from "lucide-react";
-import { Asset, AssetStatus } from "@/lib/mockups/types";
+import { Asset, AssetStatus, AssetCategory } from "@/lib/mockups/types";
 import { cn } from "@/lib/mockups/utils";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { getAssets, deleteAsset, updateAsset } from "@/lib/api";
@@ -24,6 +24,24 @@ const statusColors = {
   [AssetStatus.MAINTENANCE]: "bg-orange-50 text-orange-600 border-orange-100",
   [AssetStatus.RETIRED]: "bg-red-50 text-red-600 border-red-200",
 };
+
+const statusLabels = {
+  [AssetStatus.AVAILABLE]: "Available",
+  [AssetStatus.IN_USE]: "In Use",
+  [AssetStatus.MAINTENANCE]: "Maintenance",
+  [AssetStatus.RETIRED]: "Retired",
+};
+
+const categoryLabels = {
+  [AssetCategory.LAPTOP]: "Laptop",
+  [AssetCategory.MONITOR]: "Monitor",
+  [AssetCategory.PERIPHERAL]: "Peripheral",
+  [AssetCategory.NETWORKING]: "Networking",
+  [AssetCategory.MOBILE]: "Mobile",
+  [AssetCategory.OTHER]: "Other",
+};
+
+
 
 
 export function AssetTable() {
@@ -108,11 +126,14 @@ export function AssetTable() {
     {
       accessorKey: "category",
       header: "Category",
-      cell: ({ row }) => (
-        <span className="text-sm font-medium text-[#424245]">
-          {row.getValue("category")}
-        </span>
-      ),
+      cell: ({ row }) => {
+        const category = row.getValue("category") as AssetCategory;
+        return (
+          <span className="text-sm font-medium text-[#424245]">
+            {categoryLabels[category] || category}
+          </span>
+        );
+      },
     },
     {
       accessorKey: "status",
@@ -123,10 +144,10 @@ export function AssetTable() {
           <span
             className={cn(
               "px-2 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-tight border",
-              statusColors[status],
+              statusColors[status] || "bg-gray-50 text-gray-600 border-gray-200",
             )}
           >
-            {status}
+            {statusLabels[status] || status}
           </span>
         );
       },
