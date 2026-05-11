@@ -33,7 +33,6 @@ export default function AssetsPage() {
   });
 
   const handleAddAsset = (data: any) => {
-    // Ensure dates are correctly formatted for the API
     const assetData = {
       ...data,
       purchaseDate: data.purchaseDate ? new Date(data.purchaseDate).toISOString() : null,
@@ -45,7 +44,6 @@ export default function AssetsPage() {
   const handleExport = async () => {
     try {
       setIsExporting(true);
-      // Fetch all assets for export (using a high limit)
       const response = await getAssets({ limit: 1000 });
       const assets = response.data;
 
@@ -88,15 +86,15 @@ export default function AssetsPage() {
           <h1 className="text-3xl font-bold tracking-tight mb-1">
             Assets Inventory
           </h1>
-          <p className="text-[#86868B]">
+          <p className="text-[var(--muted-foreground)]">
             Manage, track and maintain your organization's IT assets.
           </p>
         </div>
         <div className="flex gap-3">
-          <button 
+          <button
             onClick={handleExport}
             disabled={isExporting}
-            className="flex items-center gap-2 px-4 py-2 border border-[#D2D2D7] bg-white rounded-lg text-sm font-medium hover:bg-gray-50 transition-colors shadow-sm active:scale-95 disabled:opacity-50"
+            className="flex items-center gap-2 px-4 py-2 border border-[var(--border)] bg-[var(--surface)] rounded-lg text-sm font-medium hover:bg-[var(--surface-muted)] transition-colors shadow-sm active:scale-95 disabled:opacity-50"
           >
             {isExporting ? <Loader2 className="w-4 h-4 animate-spin" /> : <FileUp className="w-4 h-4" />}
             <span>{isExporting ? "Exporting..." : "Export Inventory"}</span>
@@ -112,7 +110,6 @@ export default function AssetsPage() {
 
       <AssetTable />
 
-      {/* Asset Form Modal */}
       <AnimatePresence>
         {showForm && (
           <AssetForm
@@ -122,21 +119,20 @@ export default function AssetsPage() {
         )}
       </AnimatePresence>
 
-      {/* Success Notification Toast */}
       <AnimatePresence>
         {showSuccess && (
           <motion.div
             initial={{ opacity: 0, y: 100 }}
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: 100 }}
-            className="fixed bottom-8 right-8 z-[200] bg-gray-900 text-white px-6 py-4 rounded-apple-lg shadow-2xl flex items-center gap-4 border border-white/10"
+            className="fixed bottom-8 right-8 z-[200] bg-[var(--surface)] text-[var(--foreground)] px-6 py-4 rounded-apple-lg shadow-2xl flex items-center gap-4 border border-[var(--border)]"
           >
             <div className="w-10 h-10 rounded-full bg-primary/20 flex items-center justify-center">
               <CheckCircle className="w-6 h-6 text-primary" />
             </div>
             <div className="text-left">
               <p className="font-bold text-sm">Asset Created Successfully</p>
-              <p className="text-xs text-gray-400 font-medium">
+              <p className="text-xs text-[var(--muted-foreground)] font-medium">
                 The inventory has been updated accordingly.
               </p>
             </div>

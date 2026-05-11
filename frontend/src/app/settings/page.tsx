@@ -67,7 +67,7 @@ export default function SettingsPage() {
     <DashboardShell>
       <div className="mb-10 text-left">
         <h1 className="text-3xl font-bold tracking-tight">Settings</h1>
-        <p className="text-[#86868B]">
+        <p className="text-[var(--muted-foreground)]">
           Configure your workspace and personal preferences.
         </p>
       </div>
@@ -76,29 +76,29 @@ export default function SettingsPage() {
         <div className="lg:col-span-2 space-y-8">
           {settingsSections.map((section) => (
             <div key={section.title} className="space-y-4">
-              <h3 className="text-xs font-bold text-[#86868B] uppercase tracking-[0.2em] px-2">
+              <h3 className="text-xs font-bold text-[var(--muted-foreground)] uppercase tracking-[0.2em] px-2">
                 {section.title}
               </h3>
-              <div className="apple-card overflow-hidden divide-y divide-[#D2D2D7] bg-white">
+              <div className="apple-card overflow-hidden divide-y divide-[var(--border)] bg-[var(--surface)]">
                 {section.items.map((item) => (
                   <button
                     key={item.id}
-                    className="w-full flex items-center justify-between p-5 hover:bg-gray-50 transition-all text-left group"
+                    className="w-full flex items-center justify-between p-5 hover:bg-[var(--surface-muted)] transition-all text-left group"
                   >
                     <div className="flex items-center gap-4">
-                      <div className="w-10 h-10 rounded-xl bg-[#F5F5F7] flex items-center justify-center text-[#424245] group-hover:scale-110 transition-transform">
+                      <div className="w-10 h-10 rounded-xl bg-[var(--surface-soft)] flex items-center justify-center text-[var(--foreground)] group-hover:scale-110 transition-transform">
                         <item.icon className="w-5 h-5" />
                       </div>
                       <div>
-                        <p className="font-bold text-[#1D1D1F] leading-snug">
+                        <p className="font-bold text-[var(--foreground)] leading-snug">
                           {item.label}
                         </p>
-                        <p className="text-xs text-[#86868B] font-medium mt-0.5">
+                        <p className="text-xs text-[var(--muted-foreground)] font-medium mt-0.5">
                           {item.desc}
                         </p>
                       </div>
                     </div>
-                    <ChevronRight className="w-5 h-5 text-[#D2D2D7] group-hover:text-primary transition-colors" />
+                    <ChevronRight className="w-5 h-5 text-[var(--border)] group-hover:text-primary transition-colors" />
                   </button>
                 ))}
               </div>
@@ -128,19 +128,19 @@ export default function SettingsPage() {
             </button>
           </div>
 
-          <div className="apple-card p-6 text-center bg-white">
-            <div className="w-20 h-20 rounded-full bg-gray-100 mx-auto mb-4 border border-[#D2D2D7] flex items-center justify-center">
+          <div className="apple-card p-6 text-center bg-[var(--surface)]">
+            <div className="w-20 h-20 rounded-full bg-[var(--surface-soft)] mx-auto mb-4 border border-[var(--border)] flex items-center justify-center">
               <User className="w-10 h-10 text-gray-300" />
             </div>
             <h4 className="font-bold text-lg leading-none">Admin User</h4>
-            <p className="text-xs text-[#86868B] font-bold uppercase mt-2 mb-6">
+            <p className="text-xs text-[var(--muted-foreground)] font-bold uppercase mt-2 mb-6">
               Administrator
             </p>
-            <div className="pt-6 border-t border-[#D2D2D7] space-y-3">
-              <button className="w-full py-2 bg-gray-50 border border-[#D2D2D7] text-[#424245] text-sm font-bold rounded-lg hover:bg-gray-100 transition-colors">
+            <div className="pt-6 border-t border-[var(--border)] space-y-3">
+              <button className="w-full py-2 bg-[var(--surface-soft)] border border-[var(--border)] text-[var(--foreground)] text-sm font-bold rounded-lg hover:bg-[var(--surface-muted)] transition-colors">
                 View Public Profile
               </button>
-              <p className="text-[10px] text-[#86868B] font-medium italic">
+              <p className="text-[10px] text-[var(--muted-foreground)] font-medium italic">
                 Member since January 2024
               </p>
             </div>

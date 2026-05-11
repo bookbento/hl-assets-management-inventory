@@ -43,7 +43,7 @@ export default function LoginPage() {
     };
 
     return (
-        <div className="min-h-screen bg-[#F5F5F7] flex flex-col items-center justify-center p-6">
+        <div className="min-h-screen bg-[var(--background)] text-[var(--foreground)] flex flex-col items-center justify-center p-6">
             <motion.div
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
@@ -53,39 +53,39 @@ export default function LoginPage() {
                     <div className="w-16 h-16 bg-primary rounded-2xl flex items-center justify-center shadow-xl shadow-primary/20 mx-auto mb-6">
                         <Shield className="w-8 h-8 text-white" />
                     </div>
-                    <h1 className="text-3xl font-bold tracking-tight text-[#1D1D1F]">IT Asset Management</h1>
-                    <p className="text-[#86868B] mt-2 font-medium">Asset Management System</p>
+                    <h1 className="text-3xl font-bold tracking-tight text-[var(--foreground)]">IT Asset Management</h1>
+                    <p className="text-[var(--muted-foreground)] mt-2 font-medium">Asset Management System</p>
                 </div>
 
-                <div className="apple-card p-8 bg-white/80 backdrop-blur-xl border-white shadow-2xl shadow-gray-200/50">
+                <div className="apple-card p-8 bg-[var(--surface)]/80 backdrop-blur-xl border-[var(--border)] shadow-2xl shadow-gray-200/50 dark:shadow-black/30">
                     <form onSubmit={handleSubmit} className="space-y-6">
                         <div className="space-y-4">
                             <div className="text-left">
-                                <label className="block text-[10px] font-bold uppercase tracking-wider text-[#86868B] mb-1.5 ml-1">Username</label>
+                                <label className="block text-[10px] font-bold uppercase tracking-wider text-[var(--muted-foreground)] mb-1.5 ml-1">Username</label>
                                 <div className="relative">
-                                    <User className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-[#86868B]" />
+                                    <User className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-[var(--muted-foreground)]" />
                                     <input
                                         type="text"
                                         required
                                         value={formData.username}
                                         onChange={(e) => setFormData({ ...formData, username: e.target.value })}
                                         placeholder="Enter your ID"
-                                        className="w-full bg-gray-50 border border-[#D2D2D7] rounded-xl py-3 pl-11 pr-4 text-sm focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all"
+                                        className="w-full bg-[var(--surface-soft)] border border-[var(--border)] rounded-xl py-3 pl-11 pr-4 text-sm focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all"
                                     />
                                 </div>
                             </div>
 
                             <div className="text-left">
-                                <label className="block text-[10px] font-bold uppercase tracking-wider text-[#86868B] mb-1.5 ml-1">Password</label>
+                                <label className="block text-[10px] font-bold uppercase tracking-wider text-[var(--muted-foreground)] mb-1.5 ml-1">Password</label>
                                 <div className="relative">
-                                    <Lock className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-[#86868B]" />
+                                    <Lock className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-[var(--muted-foreground)]" />
                                     <input
                                         type="password"
                                         required
                                         value={formData.password}
                                         onChange={(e) => setFormData({ ...formData, password: e.target.value })}
                                         placeholder="••••••••"
-                                        className="w-full bg-gray-50 border border-[#D2D2D7] rounded-xl py-3 pl-11 pr-4 text-sm focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all"
+                                        className="w-full bg-[var(--surface-soft)] border border-[var(--border)] rounded-xl py-3 pl-11 pr-4 text-sm focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all"
                                     />
                                 </div>
                             </div>
@@ -112,14 +112,14 @@ export default function LoginPage() {
                     </form>
 
                     <div className="mt-8 pt-6 border-t border-[#D2D2D7] text-center">
-                        <p className="text-[11px] text-[#86868B] font-medium leading-relaxed">
+                        <p className="text-[11px] text-[var(--muted-foreground)] font-medium leading-relaxed">
                             Protected by hardware-level encryption. <br />
                             Need help? Contact <span className="text-primary font-bold cursor-pointer">IT Support</span>
                         </p>
                     </div>
                 </div>
 
-                <div className="mt-8 text-center text-[10px] uppercase font-bold tracking-widest text-[#D2D2D7]">
+                <div className="mt-8 text-center text-[10px] uppercase font-bold tracking-widest text-[var(--border)]">
                     Asset Management System &copy; 2024
                 </div>
             </motion.div>

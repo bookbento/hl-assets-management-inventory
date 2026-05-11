@@ -43,7 +43,7 @@ export function Sidebar({ className, isDrawer = false }: SidebarProps) {
 
   return (
     <div className={cn(
-      "h-full bg-white border-r border-[#D2D2D7] flex flex-col transition-all duration-300",
+      "h-full bg-[var(--surface)] border-r border-[var(--border)] flex flex-col transition-all duration-300",
       !isDrawer && "fixed left-0 top-0 z-50 hidden lg:flex lg:w-64 md:flex md:w-20",
       isDrawer && "w-full",
       className
@@ -56,7 +56,7 @@ export function Sidebar({ className, isDrawer = false }: SidebarProps) {
           <Package className="w-5 h-5 text-white" />
         </div>
         <span className={cn(
-          "font-bold text-xl tracking-tight text-[#1D1D1F] transition-opacity duration-300",
+          "font-bold text-xl tracking-tight text-[var(--foreground)] transition-opacity duration-300",
           !isDrawer && "md:hidden lg:block"
         )}>
           IT AM
@@ -73,14 +73,14 @@ export function Sidebar({ className, isDrawer = false }: SidebarProps) {
               "flex items-center gap-3 px-3 py-2 rounded-lg font-medium transition-all group overflow-hidden",
               pathname === item.href
                 ? "bg-primary/10 text-primary"
-                : "text-[#424245] hover:bg-gray-100",
+                : "text-[var(--foreground)] hover:bg-[var(--surface-muted)]",
               !isDrawer && "md:justify-center lg:justify-start"
             )}
           >
             <item.icon
               className={cn(
                 "w-5 h-5 shrink-0 transition-transform group-hover:scale-110",
-                pathname === item.href ? "text-primary" : "text-[#86868B]",
+                pathname === item.href ? "text-primary" : "text-[var(--muted-foreground)]",
               )}
             />
             <span className={cn(
@@ -93,14 +93,14 @@ export function Sidebar({ className, isDrawer = false }: SidebarProps) {
         ))}
       </nav>
 
-      <div className="p-4 border-t border-[#D2D2D7]">
+      <div className="p-4 border-t border-[var(--border)]">
         <div
           onClick={handleLogout}
           className={cn(
-            "flex items-center gap-3 px-2 py-3 rounded-xl hover:bg-gray-50 transition-colors cursor-pointer group overflow-hidden",
+            "flex items-center gap-3 px-2 py-3 rounded-xl hover:bg-[var(--surface-muted)] transition-colors cursor-pointer group overflow-hidden",
             !isDrawer && "md:justify-center lg:justify-start"
           )}>
-          <div className="w-9 h-9 rounded-full bg-gradient-to-tr from-gray-200 to-gray-300 flex items-center justify-center text-xs font-bold text-[#1D1D1F] border border-[#D2D2D7] shrink-0">
+          <div className="w-9 h-9 rounded-full bg-gradient-to-tr from-gray-200 to-gray-300 dark:from-slate-600 dark:to-slate-700 flex items-center justify-center text-xs font-bold text-[var(--foreground)] border border-[var(--border)] shrink-0">
             {(username || "User")
               .split(" ")
               .map((part: string) => part[0])
@@ -112,15 +112,15 @@ export function Sidebar({ className, isDrawer = false }: SidebarProps) {
             "flex-1 overflow-hidden text-left transition-opacity duration-300",
             !isDrawer && "md:hidden lg:block"
           )}>
-            <p className="text-sm font-semibold truncate text-[#1D1D1F]">
+            <p className="text-sm font-semibold truncate text-[var(--foreground)]">
               {username}
             </p>
-            <p className="text-[11px] text-[#86868B] truncate font-bold uppercase tracking-wide">
+            <p className="text-[11px] text-[var(--muted-foreground)] truncate font-bold uppercase tracking-wide">
               {role}
             </p>
           </div>
           <LogOut className={cn(
-            "w-4 h-4 text-[#86868B] group-hover:text-red-500 transition-colors shrink-0",
+            "w-4 h-4 text-[var(--muted-foreground)] group-hover:text-red-500 transition-colors shrink-0",
             !isDrawer && "md:hidden lg:block"
           )} />
         </div>

@@ -6,13 +6,14 @@ import { Bell, Search, Menu } from "lucide-react";
 import { useRouter, useSearchParams, usePathname } from "next/navigation";
 import { useState, useEffect } from "react";
 import { Drawer, DrawerContent, DrawerTrigger } from "@/components/ui/drawer";
+import { ThemeToggle } from "@/components/theme/theme-toggle";
 
 export function DashboardShell({ children }: { children: React.ReactNode }) {
   const router = useRouter();
   const searchParams = useSearchParams();
   const [searchQuery, setSearchQuery] = useState("");
   const pathname = usePathname();
-  const isLoginPage = pathname === '/login';
+  const isLoginPage = pathname === "/login";
 
   useEffect(() => {
     setSearchQuery(searchParams?.get("search") || "");
@@ -30,26 +31,22 @@ export function DashboardShell({ children }: { children: React.ReactNode }) {
   };
 
   return (
-    <div className="flex min-h-screen bg-[#F5F5F7]">
-
+    <div className="flex min-h-screen bg-[var(--background)] text-[var(--foreground)]">
       {!isLoginPage && <Sidebar />}
 
       <main
         className={`flex-1 overflow-y-auto min-h-screen flex flex-col transition-all duration-300
-        ${!isLoginPage ? 'lg:ml-64 md:ml-20 p-4 sm:p-6 md:p-8' : 'p-0'}
+        ${!isLoginPage ? "lg:ml-64 md:ml-20 p-4 sm:p-6 md:p-8" : "p-0"}
       `}
       >
-
-        {/* Top bar */}
         {!isLoginPage && (
           <header className="flex flex-col gap-4 mb-6 md:mb-10 sm:flex-row sm:items-center sm:justify-between">
-
             <div className="flex items-center gap-3">
               <div className="md:hidden">
                 <Drawer direction="left">
                   <DrawerTrigger asChild>
-                    <button className="p-2 bg-white border border-[#D2D2D7] rounded-lg active:scale-95 transition-all shadow-sm">
-                      <Menu className="w-5 h-5 text-[#424245]" />
+                    <button className="p-2 bg-[var(--surface)] border border-[var(--border)] rounded-lg active:scale-95 transition-all shadow-sm">
+                      <Menu className="w-5 h-5 text-[var(--foreground)]" />
                     </button>
                   </DrawerTrigger>
 
@@ -60,40 +57,39 @@ export function DashboardShell({ children }: { children: React.ReactNode }) {
               </div>
 
               <div className="text-left">
-                <h1 className="text-xl sm:text-2xl md:text-3xl font-bold tracking-tight text-[#1D1D1F]">
+                <h1 className="text-xl sm:text-2xl md:text-3xl font-bold tracking-tight text-[var(--foreground)]">
                   System Overview
                 </h1>
 
-                <p className="text-xs sm:text-sm text-[#86868B] hidden xs:block">
+                <p className="text-xs sm:text-sm text-[var(--muted-foreground)] hidden xs:block">
                   Manage and track company hardware assets.
                 </p>
               </div>
             </div>
 
             <div className="flex items-center gap-2 sm:gap-4 w-full sm:w-auto">
-              {/* Search Bar - ขยายเต็มความกว้างในมือถือ */}
               <div className="relative flex-1 sm:w-64 md:w-72 lg:w-80">
-                <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-[#86868B]" />
+                <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-[var(--muted-foreground)]" />
                 <input
                   type="text"
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
                   onKeyDown={handleSearch}
                   placeholder={pathname.startsWith("/employees") ? "Search employees..." : "Search assets..."}
-                  className="w-full bg-white border border-[#D2D2D7] rounded-full py-2 sm:py-2.5 pl-10 pr-4 text-sm focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all shadow-sm"
+                  className="w-full bg-[var(--surface)] border border-[var(--border)] rounded-full py-2 sm:py-2.5 pl-10 pr-4 text-sm text-[var(--foreground)] placeholder:text-[var(--muted-foreground)] focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all shadow-sm"
                 />
               </div>
 
-              {/* Notification Bell */}
-              <button className="p-2 sm:p-2.5 bg-white border border-[#D2D2D7] rounded-full hover:bg-gray-50 active:scale-95 transition-all relative shadow-sm flex-shrink-0">
-                <Bell className="w-4 h-4 text-[#424245]" />
-                <span className="absolute top-2 sm:top-2.5 right-2 sm:right-2.5 w-2 h-2 bg-primary rounded-full border-2 border-white"></span>
+              <ThemeToggle />
+
+              <button className="p-2 sm:p-2.5 bg-[var(--surface)] border border-[var(--border)] rounded-full hover:bg-[var(--surface-muted)] active:scale-95 transition-all relative shadow-sm flex-shrink-0">
+                <Bell className="w-4 h-4 text-[var(--foreground)]" />
+                <span className="absolute top-2 sm:top-2.5 right-2 sm:right-2.5 w-2 h-2 bg-primary rounded-full border-2 border-[var(--surface)]"></span>
               </button>
             </div>
           </header>
         )}
 
-        {/* Content */}
         <AnimatePresence mode="wait">
           <motion.div
             key={pathname}
@@ -106,7 +102,6 @@ export function DashboardShell({ children }: { children: React.ReactNode }) {
             {children}
           </motion.div>
         </AnimatePresence>
-
       </main>
     </div>
   );

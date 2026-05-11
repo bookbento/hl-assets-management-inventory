@@ -20,28 +20,28 @@ export function SummaryCards({ stats }: SummaryCardsProps) {
       value: stats.total,
       icon: Package,
       color: "text-blue-500",
-      bg: "bg-white",
+      bg: "bg-[var(--surface)]",
     },
     {
       label: "In Use",
       value: stats.inUse,
       icon: CheckCircle,
       color: "text-blue-600",
-      bg: "bg-blue-100/50",
+      bg: "bg-blue-100/50 dark:bg-blue-500/10",
     },
     {
       label: "Available",
       value: stats.available,
       icon: RefreshCw,
       color: "text-green-600",
-      bg: "bg-green-50",
+      bg: "bg-green-50 dark:bg-green-500/10",
     },
     {
       label: "Maintenance",
       value: stats.maintenance,
       icon: AlertCircle,
       color: "text-orange-500",
-      bg: "bg-orange-50",
+      bg: "bg-orange-50 dark:bg-orange-500/10",
     },
   ];
 
@@ -54,18 +54,17 @@ export function SummaryCards({ stats }: SummaryCardsProps) {
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: i * 0.1 }}
           className={cn(
-            "p-4 sm:p-5 flex flex-col justify-between col-span-1 text-left", // ปรับ padding ตามจอ
-            "rounded-[var(--radius-apple)] border border-[#d2d2d7] shadow-sm transition-all duration-200",
+            "p-4 sm:p-5 flex flex-col justify-between col-span-1 text-left rounded-[var(--radius-apple)] border border-[var(--border)] shadow-sm transition-all duration-200",
             item.bg,
           )}
         >
-          <span className="text-[10px] sm:text-xs font-bold text-[#86868B] uppercase tracking-wider">
+          <span className="text-[10px] sm:text-xs font-bold text-[var(--muted-foreground)] uppercase tracking-wider">
             {item.label}
           </span>
 
           <div className="flex items-end justify-between mt-2">
             <div className="overflow-hidden">
-              <h3 className="text-xl sm:text-2xl md:text-3xl font-bold tracking-tight truncate">
+              <h3 className="text-xl sm:text-2xl md:text-3xl font-bold tracking-tight truncate text-[var(--foreground)]">
                 {item.value.toLocaleString()}
               </h3>
 
@@ -74,7 +73,7 @@ export function SummaryCards({ stats }: SummaryCardsProps) {
                   "text-[9px] sm:text-[10px] md:text-xs font-medium mt-1 truncate",
                   item.label === "Available"
                     ? "text-primary"
-                    : "text-[#86868B]",
+                    : "text-[var(--muted-foreground)]",
                 )}
               >
                 {item.label === "Total Assets"

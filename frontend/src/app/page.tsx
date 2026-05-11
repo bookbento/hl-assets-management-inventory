@@ -78,8 +78,8 @@ export default function DashboardPage() {
           <AssetTable />
         </div>
 
-        <div className="col-span-1 lg:col-span-1 lg:row-span-3 apple-card p-5 sm:p-6 flex flex-col bg-white border border-[#D2D2D7] rounded-[var(--radius-apple)] shadow-sm order-1 lg:order-none">
-          <h4 className="font-bold mb-4 text-[#1D1D1F] text-sm sm:text-base text-left">
+        <div className="col-span-1 lg:col-span-1 lg:row-span-3 apple-card p-5 sm:p-6 flex flex-col bg-[var(--surface)] border border-[var(--border)] rounded-[var(--radius-apple)] shadow-sm order-1 lg:order-none">
+          <h4 className="font-bold mb-4 text-[var(--foreground)] text-sm sm:text-base text-left">
             Category Distribution
           </h4>
           <div className="flex-1 flex flex-col justify-center gap-5 sm:gap-6">
@@ -87,11 +87,11 @@ export default function DashboardPage() {
               const percentage = Math.round((item._count.id / stats.total) * 100);
               return (
                 <div key={item.category} className="space-y-2 text-left">
-                  <div className="flex justify-between text-[11px] sm:text-xs font-bold text-[#1D1D1F]">
+                  <div className="flex justify-between text-[11px] sm:text-xs font-bold text-[var(--foreground)]">
                     <span>{item.category}</span>
                     <span>{percentage}%</span>
                   </div>
-                  <div className="w-full h-1.5 sm:h-2 bg-gray-100 rounded-full overflow-hidden">
+                  <div className="w-full h-1.5 sm:h-2 bg-[var(--surface-muted)] rounded-full overflow-hidden">
                     <motion.div
                       initial={{ width: 0 }}
                       animate={{ width: `${percentage}%` }}

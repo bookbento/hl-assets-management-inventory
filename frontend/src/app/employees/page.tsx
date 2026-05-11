@@ -2,14 +2,13 @@
 
 import { DashboardShell } from "@/components/layout/DashboardShell";
 import { Briefcase, Plus, Search, FileDown, CheckCircle, Loader2, Building, Pencil, Trash2 } from "lucide-react";
-import { useState, useRef } from "react";
+import { useState, useRef, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { EmployeeForm } from "@/components/employees/EmployeeForm";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { getEmployees, createEmployee, updateEmployee, deleteEmployee, getBusinessUnits } from "@/lib/api";
+import { getEmployees, createEmployee, updateEmployee, deleteEmployee } from "@/lib/api";
 import { toast } from "react-hot-toast";
 import { useRouter, useSearchParams } from "next/navigation";
-import { useEffect } from "react";
 import Papa from "papaparse";
 
 export default function EmployeesPage() {
@@ -17,7 +16,7 @@ export default function EmployeesPage() {
   const [notification, setNotification] = useState<{ title: string; message: string } | null>(null);
   const [isImporting, setIsImporting] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
-  
+
   const queryClient = useQueryClient();
   const router = useRouter();
   const searchParams = useSearchParams();
@@ -27,7 +26,6 @@ export default function EmployeesPage() {
   useEffect(() => {
     setLocalSearch(urlSearch);
   }, [urlSearch]);
-
 
   const { data: employees, isLoading } = useQuery({
     queryKey: ["employees"],
@@ -112,11 +110,8 @@ export default function EmployeesPage() {
         let successCount = 0;
         let failCount = 0;
 
-        toast.loading(`Importing ${rows.length} employees...`, { id: 'import-loading' });
+        toast.loading(`Importing ${rows.length} employees...`, { id: "import-loading" });
 
-        // Get BU/Dept data to match names if needed, or assume ID is provided in CSV
-        // For simplicity, we'll assume the CSV has: name, email, businessUnitId, departmentId, jobTitleId
-        
         for (const row of rows) {
           try {
             await createEmployee({
@@ -133,19 +128,19 @@ export default function EmployeesPage() {
           }
         }
 
-        toast.dismiss('import-loading');
+        toast.dismiss("import-loading");
         queryClient.invalidateQueries({ queryKey: ["employees"] });
-        
+
         if (failCount === 0) {
           toast.success(`Successfully imported ${successCount} employees`);
         } else {
           toast.success(`Import finished: ${successCount} success, ${failCount} failed`);
         }
-        
+
         setIsImporting(false);
         if (fileInputRef.current) fileInputRef.current.value = "";
       },
-      error: (error) => {
+      error: () => {
         toast.error("Error parsing CSV file");
         setIsImporting(false);
       }
@@ -169,7 +164,7 @@ export default function EmployeesPage() {
       <div className="flex items-center justify-between mb-8">
         <div className="text-left">
           <h1 className="text-3xl font-bold tracking-tight">Employees</h1>
-          <p className="text-[#86868B]">
+          <p className="text-[var(--muted-foreground)]">
             Manage staff access and equipment assignments.
           </p>
         </div>
@@ -181,10 +176,10 @@ export default function EmployeesPage() {
             accept=".csv"
             className="hidden"
           />
-          <button 
+          <button
             onClick={() => fileInputRef.current?.click()}
             disabled={isImporting}
-            className="flex items-center gap-2 px-4 py-2 border border-[#D2D2D7] bg-white rounded-lg text-sm font-medium hover:bg-gray-50 transition-colors shadow-sm active:scale-95 disabled:opacity-50"
+            className="flex items-center gap-2 px-4 py-2 border border-[var(--border)] bg-[var(--surface)] rounded-lg text-sm font-medium hover:bg-[var(--surface-muted)] transition-colors shadow-sm active:scale-95 disabled:opacity-50"
           >
             {isImporting ? <Loader2 className="w-4 h-4 animate-spin" /> : <FileDown className="w-4 h-4" />}
             <span>{isImporting ? "Importing..." : "Import Employee"}</span>
@@ -198,10 +193,10 @@ export default function EmployeesPage() {
         </div>
       </div>
 
-      <div className="apple-card overflow-hidden bg-white min-h-[400px] flex flex-col">
-        <div className="p-5 border-b border-[#D2D2D7] flex items-center justify-between bg-gray-50/30">
+      <div className="apple-card overflow-hidden bg-[var(--surface)] min-h-[400px] flex flex-col">
+        <div className="p-5 border-b border-[var(--border)] flex items-center justify-between bg-[var(--surface-soft)]">
           <div className="relative w-72">
-            <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-[#86868B]" />
+            <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-[var(--muted-foreground)]" />
             <input
               type="text"
               value={localSearch}
@@ -210,7 +205,7 @@ export default function EmployeesPage() {
                 router.push(`/employees?search=${encodeURIComponent(e.target.value)}`);
               }}
               placeholder="Filter employees..."
-              className="w-full bg-white border border-[#D2D2D7] rounded-full py-1.5 pl-11 pr-5 text-sm focus:outline-none focus:ring-2 focus:ring-primary/20"
+              className="w-full bg-[var(--surface)] border border-[var(--border)] rounded-full py-1.5 pl-11 pr-5 text-sm focus:outline-none focus:ring-2 focus:ring-primary/20 text-[var(--foreground)] placeholder:text-[var(--muted-foreground)]"
             />
           </div>
         </div>
@@ -218,50 +213,50 @@ export default function EmployeesPage() {
         {isLoading ? (
           <div className="flex-1 flex flex-col items-center justify-center p-12">
             <Loader2 className="w-8 h-8 animate-spin text-primary mb-2" />
-            <p className="text-sm text-[#86868B]">Loading employees...</p>
+            <p className="text-sm text-[var(--muted-foreground)]">Loading employees...</p>
           </div>
         ) : (
           <div className="overflow-x-auto">
             <table className="w-full text-sm text-left">
-              <thead className="bg-gray-50/50 border-b border-[#D2D2D7]">
+              <thead className="bg-[var(--surface-soft)] border-b border-[var(--border)]">
                 <tr>
-                  <th className="px-6 py-4 text-[11px] font-bold uppercase tracking-tight text-[#86868B]">
+                  <th className="px-6 py-4 text-[11px] font-bold uppercase tracking-tight text-[var(--muted-foreground)]">
                     Name
                   </th>
-                  <th className="px-6 py-4 text-[11px] font-bold uppercase tracking-tight text-[#86868B]">
+                  <th className="px-6 py-4 text-[11px] font-bold uppercase tracking-tight text-[var(--muted-foreground)]">
                     Unit / Department
                   </th>
-                  <th className="px-6 py-4 text-[11px] font-bold uppercase tracking-tight text-[#86868B]">
+                  <th className="px-6 py-4 text-[11px] font-bold uppercase tracking-tight text-[var(--muted-foreground)]">
                     Job Title
                   </th>
-                  <th className="px-6 py-4 text-[11px] font-bold uppercase tracking-tight text-[#86868B]">
+                  <th className="px-6 py-4 text-[11px] font-bold uppercase tracking-tight text-[var(--muted-foreground)]">
                     Assets
                   </th>
-                  <th className="px-6 py-4 text-right text-[11px] font-bold uppercase tracking-tight text-[#86868B]">
+                  <th className="px-6 py-4 text-right text-[11px] font-bold uppercase tracking-tight text-[var(--muted-foreground)]">
                     Actions
                   </th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-[#D2D2D7]">
+              <tbody className="divide-y divide-[var(--border)]">
                 {filteredEmployees.map((employee: any, i: number) => (
                   <motion.tr
                     key={employee.id}
                     initial={{ opacity: 0, x: -10 }}
                     animate={{ opacity: 1, x: 0 }}
                     transition={{ delay: i * 0.05 }}
-                    className="hover:bg-gray-50 transition-colors"
+                    className="hover:bg-[var(--surface-muted)] transition-colors"
                   >
                     <td className="px-6 py-4">
                       <div className="flex items-center gap-3">
-                        <div className="w-10 h-10 rounded-full bg-gradient-to-tr from-gray-100 to-gray-200 border border-[#D2D2D7] flex items-center justify-center text-xs font-bold text-[#1D1D1F]">
+                        <div className="w-10 h-10 rounded-full bg-gradient-to-tr from-gray-100 to-gray-200 dark:from-slate-600 dark:to-slate-700 border border-[var(--border)] flex items-center justify-center text-xs font-bold text-[var(--foreground)]">
                           {(employee.name || 'E')
                             .split(" ")
                             .map((n: string) => n[0])
                             .join("")}
                         </div>
                         <div>
-                          <p className="font-bold text-[#1D1D1F]">{employee.name}</p>
-                          <p className="text-[11px] text-[#86868B] font-medium">
+                          <p className="font-bold text-[var(--foreground)]">{employee.name}</p>
+                          <p className="text-[11px] text-[var(--muted-foreground)] font-medium">
                             {employee.email}
                           </p>
                         </div>
@@ -270,13 +265,13 @@ export default function EmployeesPage() {
                     <td className="px-6 py-4">
                       <div className="space-y-1">
                         <div className="flex items-center gap-2">
-                          <span className="text-[10px] font-bold px-1.5 py-0.5 bg-gray-100 rounded text-[#86868B] uppercase">
+                          <span className="text-[10px] font-bold px-1.5 py-0.5 bg-[var(--surface-muted)] rounded text-[var(--muted-foreground)] uppercase">
                             {employee.businessUnit?.name}
                           </span>
                         </div>
                         <div className="flex items-center gap-2">
-                          <Building className="w-3 h-3 text-[#86868B]" />
-                          <span className="text-[#424245] font-medium">
+                          <Building className="w-3 h-3 text-[var(--muted-foreground)]" />
+                          <span className="text-[var(--foreground)] font-medium">
                             {employee.department?.name}
                           </span>
                         </div>
@@ -284,8 +279,8 @@ export default function EmployeesPage() {
                     </td>
                     <td className="px-6 py-4">
                       <div className="flex items-center gap-2">
-                        <Briefcase className="w-3.5 h-3.5 text-[#86868B]" />
-                        <span className="text-[#424245] font-medium">
+                        <Briefcase className="w-3.5 h-3.5 text-[var(--muted-foreground)]" />
+                        <span className="text-[var(--foreground)] font-medium">
                           {employee.jobTitle?.name}
                         </span>
                       </div>
@@ -299,14 +294,14 @@ export default function EmployeesPage() {
                       <div className="flex items-center justify-end gap-2">
                         <button
                           onClick={() => setEditingEmployee(employee)}
-                          className="p-1.5 hover:bg-gray-100 rounded-lg transition-colors text-[#86868B] hover:text-primary"
+                          className="p-1.5 hover:bg-[var(--surface-muted)] rounded-lg transition-colors text-[var(--muted-foreground)] hover:text-primary"
                         >
                           <Pencil className="w-4 h-4" />
                         </button>
                         <button
                           onClick={() => handleDelete(employee.id)}
                           disabled={deleteMut.isPending}
-                          className="p-1.5 hover:bg-red-50 rounded-lg transition-colors text-[#86868B] hover:text-red-500 disabled:opacity-50"
+                          className="p-1.5 hover:bg-red-50 dark:hover:bg-red-500/10 rounded-lg transition-colors text-[var(--muted-foreground)] hover:text-red-500 disabled:opacity-50"
                         >
                           <Trash2 className="w-4 h-4" />
                         </button>
@@ -320,7 +315,6 @@ export default function EmployeesPage() {
         )}
       </div>
 
-      {/* Employee Form Modal (Create) */}
       <AnimatePresence>
         {showForm && (
           <EmployeeForm
@@ -330,7 +324,6 @@ export default function EmployeesPage() {
         )}
       </AnimatePresence>
 
-      {/* Employee Form Modal (Edit) */}
       <AnimatePresence>
         {editingEmployee && (
           <EmployeeForm
@@ -342,21 +335,20 @@ export default function EmployeesPage() {
         )}
       </AnimatePresence>
 
-      {/* Success Notification Toast */}
       <AnimatePresence>
         {notification && (
           <motion.div
             initial={{ opacity: 0, y: 100 }}
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: 100 }}
-            className="fixed bottom-8 right-8 z-[200] bg-gray-900 text-white px-6 py-4 rounded-apple-lg shadow-2xl flex items-center gap-4 border border-white/10"
+            className="fixed bottom-8 right-8 z-[200] bg-[var(--surface)] text-[var(--foreground)] px-6 py-4 rounded-apple-lg shadow-2xl flex items-center gap-4 border border-[var(--border)]"
           >
             <div className="w-10 h-10 rounded-full bg-primary/20 flex items-center justify-center">
               <CheckCircle className="w-6 h-6 text-primary" />
             </div>
             <div className="text-left">
               <p className="font-bold text-sm">{notification.title}</p>
-              <p className="text-xs text-gray-400 font-medium">{notification.message}</p>
+              <p className="text-xs text-[var(--muted-foreground)] font-medium">{notification.message}</p>
             </div>
           </motion.div>
         )}

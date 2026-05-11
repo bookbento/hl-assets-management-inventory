@@ -35,7 +35,6 @@ const statusLabels = {
     [AssetStatus.RETIRED]: 'Retired',
 };
 
-
 export type AssetFormValues = z.infer<typeof assetSchema>;
 
 interface AssetFormProps {
@@ -66,7 +65,6 @@ export function AssetForm({
         },
     });
 
-    // Update form when initialData changes
     useEffect(() => {
         if (initialData) {
             reset(initialData);
@@ -75,14 +73,14 @@ export function AssetForm({
 
     const formContent = (
         <div className={cn(
-            "relative w-full bg-white overflow-hidden",
+            "relative w-full bg-[var(--surface)] text-[var(--foreground)] overflow-hidden border border-[var(--border)]",
             isModal ? "max-w-2xl rounded-apple-lg shadow-2xl" : "rounded-xl"
         )}>
             {isModal && (
-                <div className="px-6 py-4 border-b border-gray-100 flex items-center justify-between bg-gray-50/50">
+                <div className="px-6 py-4 border-b border-[var(--border)] flex items-center justify-between bg-[var(--surface-soft)]">
                     <h3 className="text-lg font-bold">{title}</h3>
-                    <button onClick={onClose} className="p-2 hover:bg-gray-200 rounded-full transition-colors">
-                        <X className="w-5 h-5 text-gray-500" />
+                    <button onClick={onClose} className="p-2 hover:bg-[var(--surface-muted)] rounded-full transition-colors">
+                        <X className="w-5 h-5 text-[var(--muted-foreground)]" />
                     </button>
                 </div>
             )}
@@ -90,24 +88,24 @@ export function AssetForm({
             <form onSubmit={handleSubmit(onSubmit)} className="p-6">
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                     <div className="md:col-span-2">
-                        <label className="block text-[10px] font-bold uppercase tracking-wider text-gray-400 mb-2">Asset Image</label>
-                        <div className="border-2 border-dashed border-gray-200 rounded-xl p-8 flex flex-col items-center justify-center hover:border-primary/50 transition-colors cursor-pointer group bg-gray-50/50">
-                            <div className="w-12 h-12 rounded-full bg-white shadow-sm flex items-center justify-center mb-3 group-hover:scale-110 transition-transform">
+                        <label className="block text-[10px] font-bold uppercase tracking-wider text-[var(--muted-foreground)] mb-2">Asset Image</label>
+                        <div className="border-2 border-dashed border-[var(--border)] rounded-xl p-8 flex flex-col items-center justify-center hover:border-primary/50 transition-colors cursor-pointer group bg-[var(--surface-soft)]">
+                            <div className="w-12 h-12 rounded-full bg-[var(--surface)] shadow-sm flex items-center justify-center mb-3 group-hover:scale-110 transition-transform">
                                 <Upload className="w-5 h-5 text-primary" />
                             </div>
                             <p className="text-sm font-semibold mb-1">Click to upload or drag and drop</p>
-                            <p className="text-xs text-gray-400 font-medium">PNG, JPG or WebP (max. 2MB)</p>
+                            <p className="text-xs text-[var(--muted-foreground)] font-medium">PNG, JPG or WebP (max. 2MB)</p>
                         </div>
                     </div>
 
                     <div className="space-y-4">
                         <div>
-                            <label className="block text-[10px] font-bold uppercase tracking-wider text-gray-400 mb-1.5">Asset Name</label>
+                            <label className="block text-[10px] font-bold uppercase tracking-wider text-[var(--muted-foreground)] mb-1.5">Asset Name</label>
                             <input
                                 {...register('name')}
                                 placeholder="e.g. MacBook Pro M3"
                                 className={cn(
-                                    "w-full bg-gray-50 border border-gray-200 rounded-lg px-4 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all",
+                                    "w-full bg-[var(--surface-soft)] border border-[var(--border)] rounded-lg px-4 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all",
                                     errors.name && "border-red-500 focus:ring-red-200 focus:border-red-500"
                                 )}
                             />
@@ -115,10 +113,10 @@ export function AssetForm({
                         </div>
 
                         <div>
-                            <label className="block text-[10px] font-bold uppercase tracking-wider text-gray-400 mb-1.5">Category</label>
+                            <label className="block text-[10px] font-bold uppercase tracking-wider text-[var(--muted-foreground)] mb-1.5">Category</label>
                             <select
                                 {...register('category')}
-                                className="w-full bg-gray-50 border border-gray-200 rounded-lg px-4 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all appearance-none"
+                                className="w-full bg-[var(--surface-soft)] border border-[var(--border)] rounded-lg px-4 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all appearance-none"
                             >
                                 {Object.values(AssetCategory).map((cat) => (
                                     <option key={cat} value={cat}>{categoryLabels[cat]}</option>
@@ -127,10 +125,10 @@ export function AssetForm({
                         </div>
 
                         <div>
-                            <label className="block text-[10px] font-bold uppercase tracking-wider text-gray-400 mb-1.5">Status</label>
+                            <label className="block text-[10px] font-bold uppercase tracking-wider text-[var(--muted-foreground)] mb-1.5">Status</label>
                             <select
                                 {...register('status')}
-                                className="w-full bg-gray-50 border border-gray-200 rounded-lg px-4 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all appearance-none"
+                                className="w-full bg-[var(--surface-soft)] border border-[var(--border)] rounded-lg px-4 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all appearance-none"
                             >
                                 {Object.values(AssetStatus).map((status) => (
                                     <option key={status} value={status}>{statusLabels[status]}</option>
@@ -141,38 +139,38 @@ export function AssetForm({
 
                     <div className="space-y-4 text-left">
                         <div>
-                            <label className="block text-[10px] font-bold uppercase tracking-wider text-gray-400 mb-1.5">Serial Number</label>
+                            <label className="block text-[10px] font-bold uppercase tracking-wider text-[var(--muted-foreground)] mb-1.5">Serial Number</label>
                             <input
                                 {...register('serialNumber')}
                                 placeholder="e.g. SER-123456"
-                                className="w-full bg-gray-50 border border-gray-200 rounded-lg px-4 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all"
+                                className="w-full bg-[var(--surface-soft)] border border-[var(--border)] rounded-lg px-4 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all"
                             />
                         </div>
 
                         <div>
-                            <label className="block text-[10px] font-bold uppercase tracking-wider text-gray-400 mb-1.5">Assigned To</label>
+                            <label className="block text-[10px] font-bold uppercase tracking-wider text-[var(--muted-foreground)] mb-1.5">Assigned To</label>
                             <input
                                 {...register('assignedTo')}
                                 placeholder="User Name"
-                                className="w-full bg-gray-50 border border-gray-200 rounded-lg px-4 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all"
+                                className="w-full bg-[var(--surface-soft)] border border-[var(--border)] rounded-lg px-4 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all"
                             />
                         </div>
 
                         <div className="grid grid-cols-2 gap-4">
                             <div>
-                                <label className="block text-[10px] font-bold uppercase tracking-wider text-gray-400 mb-1.5">Purchase Date</label>
+                                <label className="block text-[10px] font-bold uppercase tracking-wider text-[var(--muted-foreground)] mb-1.5">Purchase Date</label>
                                 <input
                                     type="date"
                                     {...register('purchaseDate')}
-                                    className="w-full bg-gray-50 border border-gray-200 rounded-lg px-4 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all"
+                                    className="w-full bg-[var(--surface-soft)] border border-[var(--border)] rounded-lg px-4 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all"
                                 />
                             </div>
                             <div>
-                                <label className="block text-[10px] font-bold uppercase tracking-wider text-gray-400 mb-1.5">Warranty Expiry</label>
+                                <label className="block text-[10px] font-bold uppercase tracking-wider text-[var(--muted-foreground)] mb-1.5">Warranty Expiry</label>
                                 <input
                                     type="date"
                                     {...register('warrantyExpiry')}
-                                    className="w-full bg-gray-50 border border-gray-200 rounded-lg px-4 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all"
+                                    className="w-full bg-[var(--surface-soft)] border border-[var(--border)] rounded-lg px-4 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all"
                                 />
                             </div>
                         </div>
@@ -190,7 +188,7 @@ export function AssetForm({
                         <button
                             type="button"
                             onClick={onClose}
-                            className="px-4 py-2 text-sm font-medium text-gray-600 hover:bg-gray-100 rounded-lg transition-colors"
+                            className="px-4 py-2 text-sm font-medium text-[var(--foreground)] hover:bg-[var(--surface-muted)] rounded-lg transition-colors"
                         >
                             Cancel
                         </button>

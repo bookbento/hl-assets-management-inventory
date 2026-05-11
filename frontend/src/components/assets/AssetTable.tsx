@@ -38,10 +38,10 @@ type AssetsResponse = {
 };
 
 const statusColors = {
-  [AssetStatus.AVAILABLE]: "bg-green-50 text-green-600 border-green-200",
-  [AssetStatus.IN_USE]: "bg-blue-50 text-blue-600 border-blue-100",
-  [AssetStatus.MAINTENANCE]: "bg-orange-50 text-orange-600 border-orange-100",
-  [AssetStatus.RETIRED]: "bg-red-50 text-red-600 border-red-200",
+  [AssetStatus.AVAILABLE]: "bg-green-50 text-green-600 border-green-200 dark:bg-green-500/10 dark:text-green-300 dark:border-green-500/20",
+  [AssetStatus.IN_USE]: "bg-blue-50 text-blue-600 border-blue-100 dark:bg-blue-500/10 dark:text-blue-300 dark:border-blue-500/20",
+  [AssetStatus.MAINTENANCE]: "bg-orange-50 text-orange-600 border-orange-100 dark:bg-orange-500/10 dark:text-orange-300 dark:border-orange-500/20",
+  [AssetStatus.RETIRED]: "bg-red-50 text-red-600 border-red-200 dark:bg-red-500/10 dark:text-red-300 dark:border-red-500/20",
 };
 
 const statusLabels = {
@@ -60,9 +60,6 @@ const categoryLabels = {
   [AssetCategory.OTHER]: "Other",
 };
 
-
-
-
 export function AssetTable() {
   const searchParams = useSearchParams();
   const search = searchParams?.get("search") || "";
@@ -75,7 +72,6 @@ export function AssetTable() {
   const [editingAsset, setEditingAsset] = React.useState<AssetRow | null>(null);
   const [formInitialData, setFormInitialData] = React.useState<Partial<AssetFormValues> | null>(null);
 
-  // --- Delete Logic ---
   const deleteMutation = useMutation({
     mutationFn: (id: string) => deleteAsset(id),
     onSuccess: () => {
@@ -122,7 +118,6 @@ export function AssetTable() {
       category: asset.category as AssetFormValues["category"],
       status: asset.status as AssetFormValues["status"],
       assignedTo: asset.assignedTo ?? undefined,
-      // Ensure dates are in YYYY-MM-DD format for input type="date"
       purchaseDate: asset.purchaseDate ? new Date(asset.purchaseDate).toISOString().split('T')[0] : '',
       warrantyExpiry: asset.warrantyExpiry ? new Date(asset.warrantyExpiry).toISOString().split('T')[0] : '',
     };
@@ -137,10 +132,10 @@ export function AssetTable() {
       cell: ({ row }) => (
         <div className="flex items-center gap-3">
           <div className="text-left">
-            <div className="font-bold text-[#1D1D1F] text-sm">
+            <div className="font-bold text-[var(--foreground)] text-sm">
               {row.getValue("name")}
             </div>
-            <div className="text-[10px] text-[#86868B] uppercase tracking-wider font-bold">
+            <div className="text-[10px] text-[var(--muted-foreground)] uppercase tracking-wider font-bold">
               SN: {row.original.serialNumber}
             </div>
           </div>
@@ -153,7 +148,7 @@ export function AssetTable() {
       cell: ({ row }) => {
         const category = row.getValue("category") as AssetCategory;
         return (
-          <span className="text-sm font-medium text-[#424245]">
+          <span className="text-sm font-medium text-[var(--foreground)]">
             {categoryLabels[category] || category}
           </span>
         );
@@ -168,7 +163,7 @@ export function AssetTable() {
           <span
             className={cn(
               "px-2 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-tight border",
-              statusColors[status] || "bg-gray-50 text-gray-600 border-gray-200",
+              statusColors[status] || "bg-gray-50 text-gray-600 border-gray-200 dark:bg-white/10 dark:text-gray-300 dark:border-white/10",
             )}
           >
             {statusLabels[status] || status}
@@ -182,7 +177,7 @@ export function AssetTable() {
       cell: ({ row }) => {
         // @ts-ignore
         const userName = row.original.user?.name || row.original.assignedTo;
-        return <div className="text-sm text-[#424245]">{userName || "—"}</div>;
+        return <div className="text-sm text-[var(--foreground)]">{userName || "—"}</div>;
       },
     },
     {
@@ -191,7 +186,7 @@ export function AssetTable() {
       cell: ({ row }) => {
         const date = row.getValue("warrantyExpiry") as string;
         return (
-          <span className="text-sm text-[#86868B] font-medium">
+          <span className="text-sm text-[var(--muted-foreground)] font-medium">
             {date ? new Date(date).toLocaleDateString() : "—"}
           </span>
         );
@@ -204,14 +199,14 @@ export function AssetTable() {
         <div className="flex items-center justify-end gap-2">
           <button
             onClick={() => handleEdit(row.original)}
-            className="p-1.5 hover:bg-gray-100 rounded-lg transition-colors text-[#86868B] hover:text-primary"
+            className="p-1.5 hover:bg-[var(--surface-muted)] rounded-lg transition-colors text-[var(--muted-foreground)] hover:text-primary"
           >
             <Pencil className="w-4 h-4" />
           </button>
           <button
             onClick={() => handleDelete(row.original.id)}
             disabled={deleteMutation.isPending}
-            className="p-1.5 hover:bg-red-50 rounded-lg transition-colors text-[#86868B] hover:text-red-500 disabled:opacity-50"
+            className="p-1.5 hover:bg-red-50 dark:hover:bg-red-500/10 rounded-lg transition-colors text-[var(--muted-foreground)] hover:text-red-500 disabled:opacity-50"
           >
             <Trash2 className="w-4 h-4" />
           </button>
@@ -219,6 +214,7 @@ export function AssetTable() {
       ),
     },
   ], [deleteMutation.isPending]);
+
   const { data, isLoading, error } = useQuery<AssetsResponse>({
     queryKey: ["assets", { page, limit, search }],
     queryFn: async () => (await getAssets({ page, limit, search })) as unknown as AssetsResponse,
@@ -233,16 +229,16 @@ export function AssetTable() {
 
   if (isLoading) {
     return (
-      <div className="apple-card overflow-hidden flex-1 flex flex-col items-center justify-center min-h-[400px] bg-white">
+      <div className="apple-card overflow-hidden flex-1 flex flex-col items-center justify-center min-h-[400px] bg-[var(--surface)]">
         <Loader2 className="w-8 h-8 animate-spin text-primary" />
-        <p className="mt-2 text-sm text-[#86868B]">Loading assets...</p>
+        <p className="mt-2 text-sm text-[var(--muted-foreground)]">Loading assets...</p>
       </div>
     );
   }
 
   if (error) {
     return (
-      <div className="apple-card overflow-hidden flex-1 flex flex-col items-center justify-center min-h-[400px] bg-white">
+      <div className="apple-card overflow-hidden flex-1 flex flex-col items-center justify-center min-h-[400px] bg-[var(--surface)]">
         <p className="text-sm text-red-500">
           Error loading assets. Please try again.
         </p>
@@ -251,27 +247,27 @@ export function AssetTable() {
   }
 
   return (
-    <div className="apple-card overflow-hidden flex-1 flex flex-col min-h-0 bg-white">
-      <div className="p-5 border-b border-[#D2D2D7] flex items-center justify-between">
-        <h4 className="font-bold text-[#1D1D1F]">Recent Assets</h4>
+    <div className="apple-card overflow-hidden flex-1 flex flex-col min-h-0 bg-[var(--surface)]">
+      <div className="p-5 border-b border-[var(--border)] flex items-center justify-between">
+        <h4 className="font-bold text-[var(--foreground)]">Recent Assets</h4>
         <div className="flex gap-2">
-          <button className="px-3 py-1.5 bg-gray-100 rounded-md text-[11px] font-bold uppercase tracking-tight text-[#424245] hover:bg-gray-200 transition-colors">
+          <button className="px-3 py-1.5 bg-[var(--surface-muted)] rounded-md text-[11px] font-bold uppercase tracking-tight text-[var(--foreground)] hover:bg-[var(--surface-soft)] transition-colors">
             Filter
           </button>
-          <button className="px-3 py-1.5 bg-gray-100 rounded-md text-[11px] font-bold uppercase tracking-tight text-[#424245] hover:bg-gray-200 transition-colors">
+          <button className="px-3 py-1.5 bg-[var(--surface-muted)] rounded-md text-[11px] font-bold uppercase tracking-tight text-[var(--foreground)] hover:bg-[var(--surface-soft)] transition-colors">
             Export
           </button>
         </div>
       </div>
       <div className="overflow-x-auto flex-1">
         <table className="w-full text-sm">
-          <thead className="bg-gray-50/50 border-b border-[#D2D2D7]">
+          <thead className="bg-[var(--surface-soft)] border-b border-[var(--border)]">
             {table.getHeaderGroups().map((headerGroup) => (
               <tr key={headerGroup.id}>
                 {headerGroup.headers.map((header) => (
                   <th
                     key={header.id}
-                    className="text-left px-5 py-3 text-[11px] font-bold uppercase tracking-tight text-[#86868B]"
+                    className="text-left px-5 py-3 text-[11px] font-bold uppercase tracking-tight text-[var(--muted-foreground)]"
                   >
                     {flexRender(
                       header.column.columnDef.header,
@@ -282,9 +278,9 @@ export function AssetTable() {
               </tr>
             ))}
           </thead>
-          <tbody className="divide-y divide-[#D2D2D7]">
+          <tbody className="divide-y divide-[var(--border)]">
             {table.getRowModel().rows.map((row) => (
-              <tr key={row.id} className="hover:bg-gray-50 transition-colors">
+              <tr key={row.id} className="hover:bg-[var(--surface-soft)] transition-colors">
                 {row.getVisibleCells().map((cell) => (
                   <td key={cell.id} className="px-5 py-3.5">
                     {flexRender(cell.column.columnDef.cell, cell.getContext())}
@@ -295,21 +291,21 @@ export function AssetTable() {
           </tbody>
         </table>
       </div>
-      <div className="p-4 border-t border-[#D2D2D7] flex items-center justify-between mt-auto">
-        <div className="text-[11px] text-[#86868B] font-medium">
+      <div className="p-4 border-t border-[var(--border)] flex items-center justify-between mt-auto">
+        <div className="text-[11px] text-[var(--muted-foreground)] font-medium">
           Showing{" "}
-          <span className="font-bold text-[#1D1D1F]">
+          <span className="font-bold text-[var(--foreground)]">
             {table.getRowModel().rows.length}
           </span>{" "}
           of{" "}
-          <span className="font-bold text-[#1D1D1F]">{data?.total || 0}</span>{" "}
+          <span className="font-bold text-[var(--foreground)]">{data?.total || 0}</span>{" "}
           assets
         </div>
         <div className="flex items-center gap-1">
           <button
             onClick={() => setPage((old) => Math.max(old - 1, 1))}
             disabled={page === 1}
-            className="w-8 h-8 flex items-center justify-center border border-[#D2D2D7] rounded-lg hover:bg-gray-50 disabled:opacity-30 transition-colors text-sm"
+            className="w-8 h-8 flex items-center justify-center border border-[var(--border)] rounded-lg hover:bg-[var(--surface-muted)] disabled:opacity-30 transition-colors text-sm"
           >
             ‹
           </button>
@@ -323,7 +319,7 @@ export function AssetTable() {
               )
             }
             disabled={!data || page >= (data.totalPages || 1)}
-            className="w-8 h-8 flex items-center justify-center border border-[#D2D2D7] rounded-lg hover:bg-gray-50 disabled:opacity-30 transition-colors text-sm"
+            className="w-8 h-8 flex items-center justify-center border border-[var(--border)] rounded-lg hover:bg-[var(--surface-muted)] disabled:opacity-30 transition-colors text-sm"
           >
             ›
           </button>
@@ -343,21 +339,20 @@ export function AssetTable() {
           isModal={true}
         />
       )}
-      {/* Success Notification Toast */}
       <AnimatePresence>
         {notification && (
           <motion.div
             initial={{ opacity: 0, y: 100 }}
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: 100 }}
-            className="fixed bottom-8 right-8 z-[200] bg-gray-900 text-white px-6 py-4 rounded-apple-lg shadow-2xl flex items-center gap-4 border border-white/10"
+            className="fixed bottom-8 right-8 z-[200] bg-[var(--surface)] text-[var(--foreground)] px-6 py-4 rounded-apple-lg shadow-2xl flex items-center gap-4 border border-[var(--border)]"
           >
             <div className="w-10 h-10 rounded-full bg-primary/20 flex items-center justify-center">
               <CheckCircle className="w-6 h-6 text-primary" />
             </div>
             <div className="text-left">
               <p className="font-bold text-sm">{notification.title}</p>
-              <p className="text-xs text-gray-400 font-medium">{notification.message}</p>
+              <p className="text-xs text-[var(--muted-foreground)] font-medium">{notification.message}</p>
             </div>
           </motion.div>
         )}
