@@ -8,6 +8,7 @@ import { X, Upload, Info, Image as ImageIcon, Trash2 } from 'lucide-react';
 import { motion } from 'framer-motion';
 import { cn } from '@/lib/utils';
 import { useEffect, useMemo, useRef, useState } from 'react';
+import { resolveMediaUrl } from '@/lib/config';
 
 const assetSchema = z.object({
     name: z.string().min(2, 'Name is too short'),
@@ -59,7 +60,9 @@ export function AssetForm({
 }: AssetFormProps) {
     const fileInputRef = useRef<HTMLInputElement>(null);
     const [selectedFile, setSelectedFile] = useState<File | null>(null);
-    const [previewUrl, setPreviewUrl] = useState<string | null>(initialData?.imageUrl || null);
+    const [previewUrl, setPreviewUrl] = useState<string | null>(
+        initialData?.imageUrl ? resolveMediaUrl(initialData.imageUrl) : null
+    );
     const [removeExistingImage, setRemoveExistingImage] = useState(false);
     const [dragActive, setDragActive] = useState(false);
 
@@ -79,7 +82,7 @@ export function AssetForm({
     useEffect(() => {
         if (initialData) {
             reset(initialData);
-            setPreviewUrl(initialData.imageUrl || null);
+            setPreviewUrl(initialData.imageUrl ? resolveMediaUrl(initialData.imageUrl) : null);
             setSelectedFile(null);
             setRemoveExistingImage(false);
         }

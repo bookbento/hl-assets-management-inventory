@@ -9,6 +9,7 @@ import { cn } from '@/lib/utils';
 import { useQuery } from '@tanstack/react-query';
 import { getBusinessUnits } from '@/lib/api';
 import { useEffect, useMemo, useRef, useState } from 'react';
+import { resolveMediaUrl } from '@/lib/config';
 
 const employeeSchema = z.object({
     name: z.string().min(2, 'Name is too short'),
@@ -39,7 +40,9 @@ interface EmployeeFormProps {
 export function EmployeeForm({ onClose, onSubmit, initialData, title = 'Add New Employee' }: EmployeeFormProps) {
     const fileInputRef = useRef<HTMLInputElement>(null);
     const [selectedFile, setSelectedFile] = useState<File | null>(null);
-    const [previewUrl, setPreviewUrl] = useState<string | null>(initialData?.avatarUrl || null);
+    const [previewUrl, setPreviewUrl] = useState<string | null>(
+        initialData?.avatarUrl ? resolveMediaUrl(initialData.avatarUrl) : null
+    );
     const [removeExistingAvatar, setRemoveExistingAvatar] = useState(false);
     const [dragActive, setDragActive] = useState(false);
 
@@ -89,7 +92,7 @@ export function EmployeeForm({ onClose, onSubmit, initialData, title = 'Add New 
     }, [selectedDeptId, setValue, initialData]);
 
     useEffect(() => {
-        setPreviewUrl(initialData?.avatarUrl || null);
+        setPreviewUrl(initialData?.avatarUrl ? resolveMediaUrl(initialData.avatarUrl) : null);
         setSelectedFile(null);
         setRemoveExistingAvatar(false);
     }, [initialData]);
@@ -123,7 +126,7 @@ export function EmployeeForm({ onClose, onSubmit, initialData, title = 'Add New 
                         onClick={(e) => {
                             e.stopPropagation();
                             setSelectedFile(null);
-                            setPreviewUrl(initialData?.avatarUrl || null);
+                            setPreviewUrl(initialData?.avatarUrl ? resolveMediaUrl(initialData.avatarUrl) : null);
                             if (fileInputRef.current) fileInputRef.current.value = '';
                         }}
                         className="absolute right-0 bottom-0 rounded-full bg-black/60 p-1.5 text-white"
