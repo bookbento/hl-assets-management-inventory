@@ -61,6 +61,7 @@ export default function EditAssetPage() {
     status: asset.status as AssetFormValues["status"],
     purchaseDate: asset.purchaseDate ? new Date(asset.purchaseDate).toISOString().split('T')[0] : '',
     warrantyExpiry: asset.warrantyExpiry ? new Date(asset.warrantyExpiry).toISOString().split('T')[0] : '',
+    imageUrl: asset.imageUrl,
   };
 
   return (

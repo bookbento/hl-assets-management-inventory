@@ -5,9 +5,9 @@ import { useState } from "react";
 import { AssetForm } from "@/components/assets/AssetForm";
 import { DashboardShell } from "@/components/layout/DashboardShell";
 import { AssetTable } from "@/components/assets/AssetTable";
-import { Plus, FileUp, CheckCircle, Loader2 } from "lucide-react";
+import { Plus, FileUp, CheckCircle, Loader2, Image as ImageIcon, Package, Barcode, Tag } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
-import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { createAsset, getAssets } from "@/lib/api";
 import { toast } from "react-hot-toast";
 import Papa from "papaparse";
@@ -17,6 +17,10 @@ export default function AssetsPage() {
   const [showSuccess, setShowSuccess] = useState(false);
   const [isExporting, setIsExporting] = useState(false);
   const queryClient = useQueryClient();
+  const { data: featuredAssets, isLoading: isFeaturedLoading } = useQuery({
+    queryKey: ["asset-profile"],
+    queryFn: () => getAssets({ limit: 1 }),
+  });
 
   const mutation = useMutation({
     mutationFn: createAsset,
@@ -49,7 +53,7 @@ export default function AssetsPage() {
       const response = await getAssets({ limit: 1000 });
       const assets = response.data;
 
-      const csvData = assets.map(asset => ({
+      const csvData = assets.map((asset: any) => ({
         ID: asset.id,
         Name: asset.name,
         Category: asset.category,
@@ -81,6 +85,8 @@ export default function AssetsPage() {
     }
   };
 
+  const featuredAsset = featuredAssets?.data?.[0];
+
   return (
     <DashboardShell>
       <div className="flex items-center justify-between mb-8">
@@ -93,7 +99,7 @@ export default function AssetsPage() {
           </p>
         </div>
         <div className="flex gap-3">
-          <button 
+          <button
             onClick={handleExport}
             disabled={isExporting}
             className="flex items-center gap-2 px-4 py-2 border border-[#D2D2D7] bg-white rounded-lg text-sm font-medium hover:bg-gray-50 transition-colors shadow-sm active:scale-95 disabled:opacity-50"

@@ -58,6 +58,7 @@ model Employee {
   name           String
   email          String            @unique
   phone          String?
+  avatarUrl      String?
   businessUnitId String
   departmentId   String
   jobTitleId     String
@@ -77,6 +78,7 @@ model Asset {
   serialNumber   String            @unique
   category       AssetCategory
   status         AssetStatus       @default(AVAILABLE)
+  imageUrl       String?
   purchaseDate   DateTime?
   warrantyExpiry DateTime?
   employeeAssets Employee_Assets[]

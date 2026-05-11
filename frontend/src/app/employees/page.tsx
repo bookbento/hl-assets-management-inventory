@@ -1,7 +1,7 @@
 "use client";
 
 import { DashboardShell } from "@/components/layout/DashboardShell";
-import { Briefcase, Plus, Search, FileDown, CheckCircle, Loader2, Building, Pencil, Trash2 } from "lucide-react";
+import { Briefcase, Plus, Search, FileDown, CheckCircle, Loader2, Building, Pencil, Trash2, Image as ImageIcon } from "lucide-react";
 import { useState, useRef } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { EmployeeForm } from "@/components/employees/EmployeeForm";
@@ -249,15 +249,26 @@ export default function EmployeesPage() {
                     initial={{ opacity: 0, x: -10 }}
                     animate={{ opacity: 1, x: 0 }}
                     transition={{ delay: i * 0.05 }}
-                    className="hover:bg-gray-50 transition-colors"
+                    onClick={() => setEditingEmployee(employee)}
+                    className="hover:bg-gray-50 transition-colors cursor-pointer group"
                   >
                     <td className="px-6 py-4">
                       <div className="flex items-center gap-3">
-                        <div className="w-10 h-10 rounded-full bg-gradient-to-tr from-gray-100 to-gray-200 border border-[#D2D2D7] flex items-center justify-center text-xs font-bold text-[#1D1D1F]">
-                          {(employee.name || 'E')
-                            .split(" ")
-                            .map((n: string) => n[0])
-                            .join("")}
+                        <div className="w-10 h-10 rounded-full bg-gradient-to-tr from-gray-100 to-gray-200 border border-[#D2D2D7] flex items-center justify-center text-xs font-bold text-[#1D1D1F] overflow-hidden shrink-0">
+                          {employee.avatarUrl ? (
+                            <img
+                              src={`${process.env.NEXT_PUBLIC_API_URL || "http://localhost:3001"}${employee.avatarUrl}`}
+                              alt={employee.name}
+                              className="h-full w-full object-cover"
+                            />
+                          ) : (
+                            <span>
+                              {(employee.name || 'E')
+                                .split(" ")
+                                .map((n: string) => n[0])
+                                .join("")}
+                            </span>
+                          )}
                         </div>
                         <div>
                           <p className="font-bold text-[#1D1D1F]">{employee.name}</p>
@@ -298,13 +309,19 @@ export default function EmployeesPage() {
                     <td className="px-6 py-4 text-right">
                       <div className="flex items-center justify-end gap-2">
                         <button
-                          onClick={() => setEditingEmployee(employee)}
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            setEditingEmployee(employee);
+                          }}
                           className="p-1.5 hover:bg-gray-100 rounded-lg transition-colors text-[#86868B] hover:text-primary"
                         >
                           <Pencil className="w-4 h-4" />
                         </button>
                         <button
-                          onClick={() => handleDelete(employee.id)}
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            handleDelete(employee.id);
+                          }}
                           disabled={deleteMut.isPending}
                           className="p-1.5 hover:bg-red-50 rounded-lg transition-colors text-[#86868B] hover:text-red-500 disabled:opacity-50"
                         >

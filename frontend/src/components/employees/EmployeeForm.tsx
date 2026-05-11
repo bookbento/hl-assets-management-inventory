@@ -3,12 +3,12 @@
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
-import { X, UserPlus, Mail, Briefcase, Building, Layers, Loader2, AlertCircle, ChevronDown } from 'lucide-react';
+import { X, UserPlus, Mail, Briefcase, Building, Layers, Loader2, AlertCircle, ChevronDown, Trash2 } from 'lucide-react';
 import { motion } from 'framer-motion';
 import { cn } from '@/lib/utils';
 import { useQuery } from '@tanstack/react-query';
 import { getBusinessUnits } from '@/lib/api';
-import { useEffect } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 
 const employeeSchema = z.object({
     name: z.string().min(2, 'Name is too short'),
@@ -23,14 +23,26 @@ type JobTitle = { id: string; name: string };
 type Department = { id: string; name: string; jobTitles: JobTitle[] };
 type BusinessUnit = { id: string; name: string; departments: Department[] };
 
+type EmployeeFormSubmitValues = EmployeeFormValues & {
+    imageFile?: File | null;
+    avatarUrl?: string | null;
+    removeAvatar?: string;
+};
+
 interface EmployeeFormProps {
     onClose: () => void;
-    onSubmit: (data: EmployeeFormValues) => void;
-    initialData?: Partial<EmployeeFormValues>;
+    onSubmit: (data: EmployeeFormSubmitValues) => void;
+    initialData?: Partial<EmployeeFormValues> & { avatarUrl?: string | null };
     title?: string;
 }
 
 export function EmployeeForm({ onClose, onSubmit, initialData, title = 'Add New Employee' }: EmployeeFormProps) {
+    const fileInputRef = useRef<HTMLInputElement>(null);
+    const [selectedFile, setSelectedFile] = useState<File | null>(null);
+    const [previewUrl, setPreviewUrl] = useState<string | null>(initialData?.avatarUrl || null);
+    const [removeExistingAvatar, setRemoveExistingAvatar] = useState(false);
+    const [dragActive, setDragActive] = useState(false);
+
     const {
         data: orgHierarchy = [],
         isLoading: isLoadingOrg,
@@ -60,11 +72,9 @@ export function EmployeeForm({ onClose, onSubmit, initialData, title = 'Add New 
     const selectedBUId = watch('businessUnitId');
     const selectedDeptId = watch('departmentId');
 
-    // Filtered options
     const departments = orgHierarchy.find((bu) => bu.id === selectedBUId)?.departments || [];
     const jobTitles = departments.find((dept) => dept.id === selectedDeptId)?.jobTitles || [];
 
-    // Reset children when parent changes
     useEffect(() => {
         if (!initialData) {
             setValue('departmentId', '');
@@ -78,15 +88,58 @@ export function EmployeeForm({ onClose, onSubmit, initialData, title = 'Add New 
         }
     }, [selectedDeptId, setValue, initialData]);
 
+    useEffect(() => {
+        setPreviewUrl(initialData?.avatarUrl || null);
+        setSelectedFile(null);
+        setRemoveExistingAvatar(false);
+    }, [initialData]);
+
+    useEffect(() => {
+        if (!selectedFile) return;
+        const objectUrl = URL.createObjectURL(selectedFile);
+        setPreviewUrl(objectUrl);
+        return () => URL.revokeObjectURL(objectUrl);
+    }, [selectedFile]);
+
     const submitHandler = (values: EmployeeFormValues) => {
         onSubmit({
             ...values,
             name: values.name.trim(),
             email: values.email.trim().toLowerCase(),
+            imageFile: selectedFile,
+            removeAvatar: removeExistingAvatar ? 'true' : undefined,
         });
     };
 
     const orgErrorMessage = orgError instanceof Error ? orgError.message : 'Failed to load organization data';
+
+    const avatarBox = useMemo(() => {
+        if (previewUrl) {
+            return (
+                <div className="relative w-20 h-20 rounded-full overflow-hidden border-2 border-[var(--border)] bg-[var(--surface-soft)] mx-auto">
+                    <img src={previewUrl} alt="Employee preview" className="h-full w-full object-cover" />
+                    <button
+                        type="button"
+                        onClick={(e) => {
+                            e.stopPropagation();
+                            setSelectedFile(null);
+                            setPreviewUrl(initialData?.avatarUrl || null);
+                            if (fileInputRef.current) fileInputRef.current.value = '';
+                        }}
+                        className="absolute right-0 bottom-0 rounded-full bg-black/60 p-1.5 text-white"
+                    >
+                        <Trash2 className="w-3 h-3" />
+                    </button>
+                </div>
+            );
+        }
+
+        return (
+            <div className="w-20 h-20 rounded-full bg-[var(--surface-soft)] border-2 border-dashed border-[var(--border)] flex items-center justify-center text-[var(--muted-foreground)] mb-1 overflow-hidden mx-auto group-hover:scale-105 transition-transform">
+                <UserPlus className="w-6 h-6" />
+            </div>
+        );
+    }, [initialData?.avatarUrl, previewUrl]);
 
     return (
         <div className="fixed inset-0 z-[100] flex items-center justify-center p-4">
@@ -101,34 +154,69 @@ export function EmployeeForm({ onClose, onSubmit, initialData, title = 'Add New 
                 initial={{ opacity: 0, scale: 0.95, y: 20 }}
                 animate={{ opacity: 1, scale: 1, y: 0 }}
                 exit={{ opacity: 0, scale: 0.95, y: 20 }}
-                className="relative w-full max-w-lg bg-white rounded-apple-lg shadow-2xl overflow-hidden"
+                className="relative w-full max-w-lg bg-[var(--surface)] text-[var(--foreground)] rounded-apple-lg shadow-2xl overflow-hidden border border-[var(--border)]"
             >
-                <div className="px-6 py-4 border-b border-gray-100 flex items-center justify-between bg-gray-50/50">
+                <div className="px-6 py-4 border-b border-[var(--border)] flex items-center justify-between bg-[var(--surface-soft)]">
                     <h3 className="text-lg font-bold">{title}</h3>
-                    <button onClick={onClose} className="p-2 hover:bg-gray-200 rounded-full transition-colors">
-                        <X className="w-5 h-5 text-gray-500" />
+                    <button onClick={onClose} className="p-2 hover:bg-[var(--surface-muted)] rounded-full transition-colors">
+                        <X className="w-5 h-5 text-[var(--muted-foreground)]" />
                     </button>
                 </div>
 
                 <form onSubmit={handleSubmit(submitHandler)} className="p-8">
                     <div className="space-y-5">
                         <div className="flex flex-col items-center justify-center mb-2">
-                            <div className="w-16 h-16 rounded-full bg-gray-50 border-2 border-dashed border-gray-200 flex items-center justify-center text-gray-300 mb-1 overflow-hidden">
-                                <UserPlus className="w-6 h-6" />
+                            <input
+                                ref={fileInputRef}
+                                type="file"
+                                accept="image/*"
+                                className="hidden"
+                                onChange={(e) => {
+                                    const file = e.target.files?.[0];
+                                    if (file && file.type.startsWith('image/')) {
+                                        setRemoveExistingAvatar(false);
+                                        setSelectedFile(file);
+                                    }
+                                }}
+                            />
+                            <div
+                                role="button"
+                                tabIndex={0}
+                                onClick={() => fileInputRef.current?.click()}
+                                onDragOver={(e) => {
+                                    e.preventDefault();
+                                    setDragActive(true);
+                                }}
+                                onDragLeave={() => setDragActive(false)}
+                                onDrop={(e) => {
+                                    e.preventDefault();
+                                    setDragActive(false);
+                                    const file = e.dataTransfer.files?.[0];
+                                    if (file && file.type.startsWith('image/')) {
+                                        setRemoveExistingAvatar(false);
+                                        setSelectedFile(file);
+                                    }
+                                }}
+                                className={cn(
+                                    "rounded-full transition-all cursor-pointer",
+                                    dragActive && "ring-2 ring-primary ring-offset-2"
+                                )}
+                            >
+                                {avatarBox}
                             </div>
-                            <p className="text-[10px] font-bold uppercase tracking-widest text-primary">Upload Photo</p>
+                            <p className="text-[10px] font-bold uppercase tracking-widest text-primary mt-1">Upload Photo</p>
                         </div>
 
                         <div className="grid grid-cols-2 gap-4">
                             <div>
-                                <label className="block text-[10px] font-bold uppercase tracking-wider text-gray-400 mb-1.5 flex items-center gap-2">
+                                <label className="block text-[10px] font-bold uppercase tracking-wider text-[var(--muted-foreground)] mb-1.5 flex items-center gap-2">
                                     <UserPlus className="w-3 h-3" /> Full Name
                                 </label>
                                 <input
                                     {...register('name')}
                                     placeholder="e.g. Alex Johnson"
                                     className={cn(
-                                        "w-full bg-gray-50 border border-gray-200 rounded-lg px-4 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all",
+                                        "w-full bg-[var(--surface-soft)] border border-[var(--border)] rounded-lg px-4 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all",
                                         errors.name && "border-red-500"
                                     )}
                                 />
@@ -136,14 +224,14 @@ export function EmployeeForm({ onClose, onSubmit, initialData, title = 'Add New 
                             </div>
 
                             <div>
-                                <label className="block text-[10px] font-bold uppercase tracking-wider text-gray-400 mb-1.5 flex items-center gap-2">
+                                <label className="block text-[10px] font-bold uppercase tracking-wider text-[var(--muted-foreground)] mb-1.5 flex items-center gap-2">
                                     <Mail className="w-3 h-3" /> Email
                                 </label>
                                 <input
                                     {...register('email')}
                                     placeholder="alex.j@company.com"
                                     className={cn(
-                                        "w-full bg-gray-50 border border-gray-200 rounded-lg px-4 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all",
+                                        "w-full bg-[var(--surface-soft)] border border-[var(--border)] rounded-lg px-4 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all",
                                         errors.email && "border-red-500"
                                     )}
                                 />
@@ -152,11 +240,11 @@ export function EmployeeForm({ onClose, onSubmit, initialData, title = 'Add New 
                         </div>
 
                         <div>
-                            <label className="block text-[10px] font-bold uppercase tracking-wider text-gray-400 mb-1.5 flex items-center gap-2">
+                            <label className="block text-[10px] font-bold uppercase tracking-wider text-[var(--muted-foreground)] mb-1.5 flex items-center gap-2">
                                 <Layers className="w-3 h-3" /> Business Unit
                             </label>
                             {isLoadingOrg && (
-                                <p className="mb-2 text-xs text-gray-500 flex items-center gap-1.5">
+                                <p className="mb-2 text-xs text-[var(--muted-foreground)] flex items-center gap-1.5">
                                     <Loader2 className="w-3 h-3 animate-spin" />
                                     Loading organization structure...
                                 </p>
@@ -181,32 +269,29 @@ export function EmployeeForm({ onClose, onSubmit, initialData, title = 'Add New 
                                 <select
                                     {...register('businessUnitId')}
                                     className={cn(
-                                        "w-full bg-gray-50 border rounded-lg px-4 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all appearance-none",
-
+                                        "w-full bg-[var(--surface-soft)] border rounded-lg px-4 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all appearance-none",
                                         watch('businessUnitId')
-                                            ? "text-gray-900 border-gray-200"
-                                            : "text-gray-400 border-gray-200",
-
+                                            ? "text-[var(--foreground)] border-[var(--border)]"
+                                            : "text-[var(--muted-foreground)] border-[var(--border)]",
                                         errors.businessUnitId && "border-red-500"
                                     )}
                                     disabled={isLoadingOrg || isOrgError}
                                 >
                                     <option value="">Select Business Unit</option>
-
                                     {orgHierarchy.map((bu) => (
                                         <option key={bu.id} value={bu.id}>
                                             {bu.name}
                                         </option>
                                     ))}
                                 </select>
-                                <ChevronDown className="w-4 h-4 absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none" />
+                                <ChevronDown className="w-4 h-4 absolute right-3 top-1/2 -translate-y-1/2 text-[var(--muted-foreground)] pointer-events-none" />
                             </div>
                             {errors.businessUnitId && <p className="mt-1 text-xs text-red-500 font-medium">{errors.businessUnitId.message}</p>}
                         </div>
 
                         <div className="grid grid-cols-2 gap-4">
                             <div>
-                                <label className="block text-[10px] font-bold uppercase tracking-wider text-gray-400 mb-1.5 flex items-center gap-2">
+                                <label className="block text-[10px] font-bold uppercase tracking-wider text-[var(--muted-foreground)] mb-1.5 flex items-center gap-2">
                                     <Building className="w-3 h-3" /> Department
                                 </label>
                                 <div className="relative">
@@ -215,13 +300,11 @@ export function EmployeeForm({ onClose, onSubmit, initialData, title = 'Add New 
                                         className={cn(
                                             "w-full rounded-lg px-4 py-2 text-sm transition-all appearance-none",
                                             selectedBUId
-                                                ? "bg-gray-50 border border-gray-200 focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary"
-                                                : "bg-gray-100 border border-gray-100 text-gray-400 cursor-not-allowed",
-
+                                                ? "bg-[var(--surface-soft)] border border-[var(--border)] focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary"
+                                                : "bg-[var(--surface-muted)] border border-[var(--surface-muted)] text-[var(--muted-foreground)] cursor-not-allowed",
                                             watch("departmentId")
-                                                ? "text-gray-900 border-gray-200"
-                                                : "text-gray-400 border-gray-200",
-
+                                                ? "text-[var(--foreground)] border-[var(--border)]"
+                                                : "text-[var(--muted-foreground)] border-[var(--border)]",
                                             errors.departmentId && "border-red-500"
                                         )}
                                         disabled={!selectedBUId || isLoadingOrg || isOrgError}
@@ -235,12 +318,12 @@ export function EmployeeForm({ onClose, onSubmit, initialData, title = 'Add New 
                                             <option key={dept.id} value={dept.id}>{dept.name}</option>
                                         ))}
                                     </select>
-                                    <ChevronDown className="w-4 h-4 absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none" />
+                                    <ChevronDown className="w-4 h-4 absolute right-3 top-1/2 -translate-y-1/2 text-[var(--muted-foreground)] pointer-events-none" />
                                 </div>
                                 {errors.departmentId && <p className="mt-1 text-xs text-red-500 font-medium">{errors.departmentId.message}</p>}
                             </div>
                             <div>
-                                <label className="block text-[10px] font-bold uppercase tracking-wider text-gray-400 mb-1.5 flex items-center gap-2">
+                                <label className="block text-[10px] font-bold uppercase tracking-wider text-[var(--muted-foreground)] mb-1.5 flex items-center gap-2">
                                     <Briefcase className="w-3 h-3" /> Job Title
                                 </label>
                                 <div className="relative">
@@ -249,13 +332,11 @@ export function EmployeeForm({ onClose, onSubmit, initialData, title = 'Add New 
                                         className={cn(
                                             "w-full rounded-lg px-4 py-2 text-sm transition-all appearance-none",
                                             selectedDeptId
-                                                ? "bg-gray-50 border border-gray-200 focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary"
-                                                : "bg-gray-100 border border-gray-100 text-gray-400 cursor-not-allowed",
-
+                                                ? "bg-[var(--surface-soft)] border border-[var(--border)] focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary"
+                                                : "bg-[var(--surface-muted)] border border-[var(--surface-muted)] text-[var(--muted-foreground)] cursor-not-allowed",
                                             watch("jobTitleId")
-                                                ? "text-gray-900 border-gray-200"
-                                                : "text-gray-400 border-gray-200",
-
+                                                ? "text-[var(--foreground)] border-[var(--border)]"
+                                                : "text-[var(--muted-foreground)] border-[var(--border)]",
                                             errors.jobTitleId && "border-red-500"
                                         )}
                                         disabled={!selectedDeptId || isLoadingOrg || isOrgError}
@@ -269,7 +350,7 @@ export function EmployeeForm({ onClose, onSubmit, initialData, title = 'Add New 
                                             <option key={jt.id} value={jt.id}>{jt.name}</option>
                                         ))}
                                     </select>
-                                    <ChevronDown className="w-4 h-4 absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none" />
+                                    <ChevronDown className="w-4 h-4 absolute right-3 top-1/2 -translate-y-1/2 text-[var(--muted-foreground)] pointer-events-none" />
                                 </div>
                                 {errors.jobTitleId && <p className="mt-1 text-xs text-red-500 font-medium">{errors.jobTitleId.message}</p>}
                             </div>
@@ -280,7 +361,7 @@ export function EmployeeForm({ onClose, onSubmit, initialData, title = 'Add New 
                         <button
                             type="button"
                             onClick={onClose}
-                            className="flex-1 py-3 text-sm font-bold text-gray-600 hover:bg-gray-100 rounded-xl transition-colors"
+                            className="flex-1 py-3 text-sm font-bold text-[var(--foreground)] hover:bg-[var(--surface-muted)] rounded-xl transition-colors"
                         >
                             Cancel
                         </button>

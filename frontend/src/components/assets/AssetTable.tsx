@@ -7,7 +7,7 @@ import {
   getCoreRowModel,
   useReactTable,
 } from "@tanstack/react-table";
-import { Loader2, Pencil, Trash2, CheckCircle } from "lucide-react";
+import { Loader2, Pencil, Trash2, CheckCircle, Image as ImageIcon } from "lucide-react";
 import { AssetStatus, AssetCategory } from "@/lib/mockups/types";
 import { cn } from "@/lib/mockups/utils";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
@@ -23,6 +23,7 @@ type AssetRow = {
   serialNumber: string;
   category: AssetCategory;
   status: AssetStatus;
+  imageUrl?: string | null;
   assignedTo?: string | null;
   purchaseDate?: string | Date | null;
   warrantyExpiry?: string | Date | null;
@@ -116,12 +117,13 @@ export function AssetTable() {
   });
 
   const handleEdit = (asset: AssetRow) => {
-    const formattedData: Partial<AssetFormValues> = {
+    const formattedData: Partial<AssetFormValues> & { imageUrl?: string | null } = {
       name: asset.name,
       serialNumber: asset.serialNumber,
       category: asset.category as AssetFormValues["category"],
       status: asset.status as AssetFormValues["status"],
       assignedTo: asset.assignedTo ?? undefined,
+      imageUrl: asset.imageUrl ?? undefined,
       // Ensure dates are in YYYY-MM-DD format for input type="date"
       purchaseDate: asset.purchaseDate ? new Date(asset.purchaseDate).toISOString().split('T')[0] : '',
       warrantyExpiry: asset.warrantyExpiry ? new Date(asset.warrantyExpiry).toISOString().split('T')[0] : '',
@@ -136,6 +138,17 @@ export function AssetTable() {
       header: "Asset Name",
       cell: ({ row }) => (
         <div className="flex items-center gap-3">
+          <div className="w-11 h-11 rounded-xl border border-[var(--border)] bg-[var(--surface-soft)] overflow-hidden shrink-0 flex items-center justify-center">
+            {row.original.imageUrl ? (
+              <img
+                src={`${process.env.NEXT_PUBLIC_API_URL || "http://localhost:3001"}${row.original.imageUrl}`}
+                alt={row.getValue("name")}
+                className="h-full w-full object-cover"
+              />
+            ) : (
+              <ImageIcon className="w-5 h-5 text-[var(--muted-foreground)]" />
+            )}
+          </div>
           <div className="text-left">
             <div className="font-bold text-[#1D1D1F] text-sm">
               {row.getValue("name")}
@@ -203,13 +216,19 @@ export function AssetTable() {
       cell: ({ row }) => (
         <div className="flex items-center justify-end gap-2">
           <button
-            onClick={() => handleEdit(row.original)}
+            onClick={(e) => {
+              e.stopPropagation();
+              handleEdit(row.original);
+            }}
             className="p-1.5 hover:bg-gray-100 rounded-lg transition-colors text-[#86868B] hover:text-primary"
           >
             <Pencil className="w-4 h-4" />
           </button>
           <button
-            onClick={() => handleDelete(row.original.id)}
+            onClick={(e) => {
+              e.stopPropagation();
+              handleDelete(row.original.id);
+            }}
             disabled={deleteMutation.isPending}
             className="p-1.5 hover:bg-red-50 rounded-lg transition-colors text-[#86868B] hover:text-red-500 disabled:opacity-50"
           >
@@ -284,7 +303,11 @@ export function AssetTable() {
           </thead>
           <tbody className="divide-y divide-[#D2D2D7]">
             {table.getRowModel().rows.map((row) => (
-              <tr key={row.id} className="hover:bg-gray-50 transition-colors">
+              <tr
+                key={row.id}
+                onClick={() => handleEdit(row.original)}
+                className="hover:bg-gray-50 transition-colors cursor-pointer group"
+              >
                 {row.getVisibleCells().map((cell) => (
                   <td key={cell.id} className="px-5 py-3.5">
                     {flexRender(cell.column.columnDef.cell, cell.getContext())}
@@ -334,7 +357,12 @@ export function AssetTable() {
           title="Edit Asset"
           initialData={formInitialData || undefined}
           onSubmit={(data) => {
-            updateMutation.mutate({ id: editingAsset.id, data });
+            const formattedData = {
+              ...data,
+              purchaseDate: data.purchaseDate ? new Date(data.purchaseDate).toISOString() : null,
+              warrantyExpiry: data.warrantyExpiry ? new Date(data.warrantyExpiry).toISOString() : null,
+            };
+            updateMutation.mutate({ id: editingAsset.id, data: formattedData as any });
           }}
           onClose={() => {
             setEditingAsset(null);
