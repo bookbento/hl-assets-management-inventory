@@ -8,7 +8,7 @@ import { motion } from 'framer-motion';
 import { cn } from '@/lib/utils';
 import { useQuery } from '@tanstack/react-query';
 import { getBusinessUnits } from '@/lib/api';
-import { useEffect, useMemo, useRef, useState } from 'react';
+import { useEffect, useMemo, useRef, useState, useCallback } from 'react';
 import { resolveMediaUrl } from '@/lib/config';
 
 const employeeSchema = z.object({
@@ -104,6 +104,15 @@ export function EmployeeForm({ onClose, onSubmit, initialData, title = 'Add New 
         return () => URL.revokeObjectURL(objectUrl);
     }, [selectedFile]);
 
+    const clearAvatar = useCallback(() => {
+        setSelectedFile(null);
+        setPreviewUrl(null);
+        setRemoveExistingAvatar(Boolean(initialData?.avatarUrl));
+        if (fileInputRef.current) {
+            fileInputRef.current.value = '';
+        }
+    }, [initialData?.avatarUrl]);
+
     const submitHandler = (values: EmployeeFormValues) => {
         onSubmit({
             ...values,
@@ -125,11 +134,10 @@ export function EmployeeForm({ onClose, onSubmit, initialData, title = 'Add New 
                         type="button"
                         onClick={(e) => {
                             e.stopPropagation();
-                            setSelectedFile(null);
-                            setPreviewUrl(initialData?.avatarUrl ? resolveMediaUrl(initialData.avatarUrl) : null);
-                            if (fileInputRef.current) fileInputRef.current.value = '';
+                            clearAvatar();
                         }}
-                        className="absolute right-0 bottom-0 rounded-full bg-black/60 p-1.5 text-white"
+                        aria-label="Remove uploaded avatar"
+                        className="absolute right-0 bottom-0 rounded-full bg-black/60 p-1.5 text-white hover:bg-red-600 transition-colors"
                     >
                         <Trash2 className="w-3 h-3" />
                     </button>
@@ -142,7 +150,7 @@ export function EmployeeForm({ onClose, onSubmit, initialData, title = 'Add New 
                 <UserPlus className="w-6 h-6" />
             </div>
         );
-    }, [initialData?.avatarUrl, previewUrl]);
+    }, [clearAvatar, initialData?.avatarUrl, previewUrl]);
 
     return (
         <div className="fixed inset-0 z-[100] flex items-center justify-center p-4">

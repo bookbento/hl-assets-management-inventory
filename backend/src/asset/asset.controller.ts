@@ -47,7 +47,8 @@ export class AssetController {
   @UseInterceptors(FileInterceptor('image', uploadOptions))
   create(@Body() createAssetDto: CreateAssetDto, @UploadedFile() file?: any) {
     const imageUrl = file ? `/uploads/${file.filename}` : undefined;
-    return this.assetService.create({ ...createAssetDto, imageUrl });
+    const { removeImage, ...payload } = createAssetDto as CreateAssetDto & { removeImage?: string };
+    return this.assetService.create({ ...payload, imageUrl });
   }
 
   @Get('summary')
@@ -74,9 +75,10 @@ export class AssetController {
   ) {
     const imageUrl = file ? `/uploads/${file.filename}` : undefined;
     const shouldRemoveImage = updateAssetDto.removeImage === 'true';
+    const { removeImage, ...payload } = updateAssetDto as UpdateAssetDto & { removeImage?: string };
 
     return this.assetService.update(id, {
-      ...updateAssetDto,
+      ...payload,
       ...(imageUrl ? { imageUrl } : shouldRemoveImage ? { imageUrl: null } : {}),
     });
   }

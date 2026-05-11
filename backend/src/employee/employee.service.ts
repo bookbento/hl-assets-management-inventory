@@ -8,10 +8,21 @@ export class EmployeeService {
   constructor(private prisma: PrismaService) {}
 
   async create(createEmployeeDto: CreateEmployeeDto) {
-    const { username, password, role, ...employeeData } = createEmployeeDto;
+    const { username, password, role, businessUnitId, departmentId, jobTitleId, ...employeeData } = createEmployeeDto;
 
     const employee = await this.prisma.employee.create({
-      data: employeeData,
+      data: {
+        ...employeeData,
+        businessUnit: {
+          connect: { id: businessUnitId },
+        },
+        department: {
+          connect: { id: departmentId },
+        },
+        jobTitle: {
+          connect: { id: jobTitleId },
+        },
+      },
     });
 
     if (username && password) {
@@ -73,9 +84,41 @@ export class EmployeeService {
   }
 
   update(id: string, updateEmployeeDto: UpdateEmployeeDto) {
+    const {
+      removeAvatar,
+      businessUnitId,
+      departmentId,
+      jobTitleId,
+      ...employeeData
+    } = updateEmployeeDto;
+
     return this.prisma.employee.update({
       where: { id },
-      data: updateEmployeeDto,
+      data: {
+        ...employeeData,
+        ...(removeAvatar === 'true' ? { avatarUrl: null } : {}),
+        ...(businessUnitId
+          ? {
+              businessUnit: {
+                connect: { id: businessUnitId },
+              },
+            }
+          : {}),
+        ...(departmentId
+          ? {
+              department: {
+                connect: { id: departmentId },
+              },
+            }
+          : {}),
+        ...(jobTitleId
+          ? {
+              jobTitle: {
+                connect: { id: jobTitleId },
+              },
+            }
+          : {}),
+      },
     });
   }
 
