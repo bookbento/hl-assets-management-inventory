@@ -7,6 +7,8 @@ import {
   Users,
   Settings,
   LogOut,
+  Ticket,
+  Key
 } from "lucide-react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
@@ -18,6 +20,8 @@ const sidebarItems = [
   { label: "Dashboard", icon: LayoutDashboard, href: "/", roles: ["admin", "user"] },
   { label: "Assets", icon: Package, href: "/assets", roles: ["admin", "user"] },
   { label: "Employees", icon: Users, href: "/employees", roles: ["admin"] },
+  { label: "Licenses", icon: Key, href: "/licenses", roles: ["admin"] },
+  { label: "Tickets", icon: Ticket, href: "/tickets", roles: ["admin"] },
   { label: "Settings", icon: Settings, href: "/settings", roles: ["admin"] },
 ];
 
