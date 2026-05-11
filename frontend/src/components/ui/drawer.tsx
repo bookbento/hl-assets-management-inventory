@@ -61,7 +61,7 @@ function DrawerContent({
     fixed inset-y-0 left-0 z-50
     flex flex-col
     h-[100dvh] w-[60%] max-w-sm
-    bg-white text-sm
+    bg-[var(--surface)] text-sm text-[var(--foreground)]
     border-none rounded-none
     data-[vaul-drawer-direction=left]:left-0
     data-[vaul-drawer-direction=left]:inset-y-0

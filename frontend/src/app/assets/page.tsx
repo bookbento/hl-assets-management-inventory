@@ -47,7 +47,7 @@ export default function AssetsPage() {
       const response = await getAssets({ limit: 1000 });
       const assets = response.data;
 
-      const csvData = assets.map(asset => ({
+      const csvData = assets.map((asset: any) => ({
         ID: asset.id,
         Name: asset.name,
         Category: asset.category,

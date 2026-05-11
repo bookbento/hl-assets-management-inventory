@@ -51,7 +51,7 @@ export default function EditAssetPage() {
 
   if (isLoading) return <div className="flex items-center justify-center h-64">Loading asset...</div>;
   if (isError) return <div className="text-red-500 text-center py-12">Error loading asset.</div>;
-  if (!asset) return <div className="text-gray-500 text-center py-12">Asset not found.</div>;
+  if (!asset) return <div className="text-[var(--muted-foreground)] text-center py-12">Asset not found.</div>;
 
   // Format dates for the form (YYYY-MM-DD)
   const initialData = {
@@ -66,7 +66,7 @@ export default function EditAssetPage() {
   return (
     <DashboardShell>
       <div className="space-y-6">
-        <h1 className="text-3xl font-bold text-gray-900">Edit Asset</h1>
+        <h1 className="text-3xl font-bold text-[var(--foreground)]">Edit Asset</h1>
         <Card className="border-none shadow-apple-sm">
           <CardHeader>
             <CardTitle>Asset Details</CardTitle>

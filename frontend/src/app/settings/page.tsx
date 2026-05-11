@@ -123,14 +123,14 @@ export default function SettingsPage() {
                 <Monitor className="w-6 h-6" />
               </div>
             </div>
-            <button className="w-full py-3 bg-white text-primary font-bold rounded-xl text-sm transition-transform active:scale-95">
+            <button className="w-full py-3 bg-white text-primary font-bold rounded-xl text-sm transition-transform active:scale-95 dark:bg-[var(--surface)] dark:text-[var(--foreground)]">
               Manage Billing
             </button>
           </div>
 
           <div className="apple-card p-6 text-center bg-[var(--surface)]">
             <div className="w-20 h-20 rounded-full bg-[var(--surface-soft)] mx-auto mb-4 border border-[var(--border)] flex items-center justify-center">
-              <User className="w-10 h-10 text-gray-300" />
+              <User className="w-10 h-10 text-[var(--muted-foreground)]" />
             </div>
             <h4 className="font-bold text-lg leading-none">Admin User</h4>
             <p className="text-xs text-[var(--muted-foreground)] font-bold uppercase mt-2 mb-6">

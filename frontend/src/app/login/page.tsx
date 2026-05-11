@@ -111,7 +111,7 @@ export default function LoginPage() {
                         </button>
                     </form>
 
-                    <div className="mt-8 pt-6 border-t border-[#D2D2D7] text-center">
+                    <div className="mt-8 pt-6 border-t border-[var(--border)] text-center">
                         <p className="text-[11px] text-[var(--muted-foreground)] font-medium leading-relaxed">
                             Protected by hardware-level encryption. <br />
                             Need help? Contact <span className="text-primary font-bold cursor-pointer">IT Support</span>
