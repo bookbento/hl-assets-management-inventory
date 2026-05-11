@@ -139,12 +139,12 @@ export function AssetTable() {
       header: "Asset Name",
       cell: ({ row }) => (
         <div className="flex items-center gap-3">
-          <div className="w-11 h-11 rounded-xl border border-[var(--border)] bg-[var(--surface-soft)] overflow-hidden shrink-0 flex items-center justify-center">
+          <div className="w-11 h-11 rounded-md border border-[var(--border)] bg-[var(--surface-soft)] overflow-hidden shrink-0 flex items-center justify-center">
             {row.original.imageUrl ? (
               <img
                 src={resolveMediaUrl(row.original.imageUrl) || undefined}
                 alt={row.getValue("name")}
-                className="h-full w-full object-cover"
+                className="h-full w-full object-contain"
               />
             ) : (
               <ImageIcon className="w-5 h-5 text-[var(--muted-foreground)]" />
