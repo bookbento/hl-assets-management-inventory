@@ -1,8 +1,7 @@
 // frontend/src/lib/api.ts
 import { Asset, AssetCategory, AssetStatus } from "@prisma/client";
 import { getSession } from "next-auth/react";
-
-const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:3001";
+import { API_URL } from "@/lib/config";
 
 type AssetRecord = Asset & {
   imageUrl?: string | null;

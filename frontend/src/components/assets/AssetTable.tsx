@@ -12,6 +12,7 @@ import { AssetStatus, AssetCategory } from "@/lib/mockups/types";
 import { cn } from "@/lib/mockups/utils";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { getAssets, deleteAsset, updateAsset } from "@/lib/api";
+import { resolveMediaUrl } from "@/lib/config";
 import { toast } from "react-hot-toast";
 import { AssetForm, AssetFormValues } from "./AssetForm";
 import { motion, AnimatePresence } from "framer-motion";
@@ -141,7 +142,7 @@ export function AssetTable() {
           <div className="w-11 h-11 rounded-xl border border-[var(--border)] bg-[var(--surface-soft)] overflow-hidden shrink-0 flex items-center justify-center">
             {row.original.imageUrl ? (
               <img
-                src={`${process.env.NEXT_PUBLIC_API_URL || "http://localhost:3001"}${row.original.imageUrl}`}
+                src={resolveMediaUrl(row.original.imageUrl) || undefined}
                 alt={row.getValue("name")}
                 className="h-full w-full object-cover"
               />

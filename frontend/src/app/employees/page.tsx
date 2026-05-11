@@ -6,11 +6,12 @@ import { useState, useRef } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { EmployeeForm } from "@/components/employees/EmployeeForm";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { getEmployees, createEmployee, updateEmployee, deleteEmployee, getBusinessUnits } from "@/lib/api";
+import { getEmployees, createEmployee, updateEmployee, deleteEmployee } from "@/lib/api";
 import { toast } from "react-hot-toast";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useEffect } from "react";
 import Papa from "papaparse";
+import { resolveMediaUrl } from "@/lib/config";
 
 export default function EmployeesPage() {
   const [showForm, setShowForm] = useState(false);
@@ -257,7 +258,7 @@ export default function EmployeesPage() {
                         <div className="w-10 h-10 rounded-full bg-gradient-to-tr from-gray-100 to-gray-200 border border-[#D2D2D7] flex items-center justify-center text-xs font-bold text-[#1D1D1F] overflow-hidden shrink-0">
                           {employee.avatarUrl ? (
                             <img
-                              src={`${process.env.NEXT_PUBLIC_API_URL || "http://localhost:3001"}${employee.avatarUrl}`}
+                              src={resolveMediaUrl(employee.avatarUrl) || undefined}
                               alt={employee.name}
                               className="h-full w-full object-cover"
                             />

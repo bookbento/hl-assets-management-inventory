@@ -5,9 +5,9 @@ import { useState } from "react";
 import { AssetForm } from "@/components/assets/AssetForm";
 import { DashboardShell } from "@/components/layout/DashboardShell";
 import { AssetTable } from "@/components/assets/AssetTable";
-import { Plus, FileUp, CheckCircle, Loader2, Image as ImageIcon, Package, Barcode, Tag } from "lucide-react";
+import { Plus, FileUp, CheckCircle, Loader2 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
-import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { createAsset, getAssets } from "@/lib/api";
 import { toast } from "react-hot-toast";
 import Papa from "papaparse";
@@ -17,10 +17,6 @@ export default function AssetsPage() {
   const [showSuccess, setShowSuccess] = useState(false);
   const [isExporting, setIsExporting] = useState(false);
   const queryClient = useQueryClient();
-  const { data: featuredAssets, isLoading: isFeaturedLoading } = useQuery({
-    queryKey: ["asset-profile"],
-    queryFn: () => getAssets({ limit: 1 }),
-  });
 
   const mutation = useMutation({
     mutationFn: createAsset,
@@ -84,8 +80,6 @@ export default function AssetsPage() {
       setIsExporting(false);
     }
   };
-
-  const featuredAsset = featuredAssets?.data?.[0];
 
   return (
     <DashboardShell>
