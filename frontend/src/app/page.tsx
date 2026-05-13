@@ -1,6 +1,7 @@
 // frontend/src/app/page.tsx
 "use client";
 
+import { Suspense } from "react";
 import { DashboardShell } from "@/components/layout/DashboardShell";
 import { SummaryCards } from "@/components/dashboard/SummaryCards";
 import { AssetTable } from "@/components/assets/AssetTable";
@@ -60,17 +61,20 @@ export default function DashboardPage() {
 
   if (isLoading) {
     return (
-      <DashboardShell>
-        <div className="flex items-center justify-center h-full min-h-[400px]">
-          <Loader2 className="w-8 h-8 animate-spin text-primary" />
-        </div>
-      </DashboardShell>
+      <Suspense fallback={<div className="min-h-[400px]" />}>
+        <DashboardShell>
+          <div className="flex items-center justify-center h-full min-h-[400px]">
+            <Loader2 className="w-8 h-8 animate-spin text-primary" />
+          </div>
+        </DashboardShell>
+      </Suspense>
     );
   }
 
   return (
-    <DashboardShell>
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 lg:grid-rows-6 gap-4 sm:gap-6 flex-1">
+    <Suspense fallback={<div className="min-h-[400px]" />}>
+      <DashboardShell>
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 lg:grid-rows-6 gap-4 sm:gap-6 flex-1">
 
         <SummaryCards stats={stats} />
 
@@ -120,7 +124,8 @@ export default function DashboardPage() {
             Download PDF
           </button>
         </div>
-      </div>
-    </DashboardShell>
+        </div>
+      </DashboardShell>
+    </Suspense>
   );
 }

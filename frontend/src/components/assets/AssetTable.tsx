@@ -1,6 +1,7 @@
 "use client";
 
 import * as React from "react";
+import { Suspense } from "react";
 import {
   ColumnDef,
   flexRender,
@@ -65,7 +66,7 @@ const categoryLabels = {
 
 
 
-export function AssetTable() {
+function AssetTableContent() {
   const searchParams = useSearchParams();
   const search = searchParams?.get("search") || "";
   const queryClient = useQueryClient();
@@ -392,5 +393,13 @@ export function AssetTable() {
         )}
       </AnimatePresence>
     </div>
+  );
+}
+
+export function AssetTable() {
+  return (
+    <Suspense fallback={<div className="apple-card min-h-[400px] bg-white" />}>
+      <AssetTableContent />
+    </Suspense>
   );
 }

@@ -10,10 +10,11 @@ import { getEmployees, createEmployee, updateEmployee, deleteEmployee } from "@/
 import { toast } from "react-hot-toast";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useEffect } from "react";
+import { Suspense } from "react";
 import Papa from "papaparse";
 import { resolveMediaUrl } from "@/lib/config";
 
-export default function EmployeesPage() {
+function EmployeesPageContent() {
   const [showForm, setShowForm] = useState(false);
   const [notification, setNotification] = useState<{ title: string; message: string } | null>(null);
   const [isImporting, setIsImporting] = useState(false);
@@ -380,5 +381,13 @@ export default function EmployeesPage() {
         )}
       </AnimatePresence>
     </DashboardShell>
+  );
+}
+
+export default function EmployeesPage() {
+  return (
+    <Suspense fallback={<div className="min-h-[400px]" />}>
+      <EmployeesPageContent />
+    </Suspense>
   );
 }

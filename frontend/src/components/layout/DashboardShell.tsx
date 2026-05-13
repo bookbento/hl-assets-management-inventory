@@ -1,13 +1,14 @@
 "use client";
 
 import { Sidebar } from "./Sidebar";
+import { Suspense } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Bell, Search, Menu } from "lucide-react";
 import { useRouter, useSearchParams, usePathname } from "next/navigation";
 import { useState, useEffect } from "react";
 import { Drawer, DrawerContent, DrawerTrigger } from "@/components/ui/drawer";
 
-export function DashboardShell({ children }: { children: React.ReactNode }) {
+function DashboardShellContent({ children }: { children: React.ReactNode }) {
   const router = useRouter();
   const searchParams = useSearchParams();
   const [searchQuery, setSearchQuery] = useState("");
@@ -109,5 +110,13 @@ export function DashboardShell({ children }: { children: React.ReactNode }) {
 
       </main>
     </div>
+  );
+}
+
+export function DashboardShell({ children }: { children: React.ReactNode }) {
+  return (
+    <Suspense fallback={<div className="min-h-screen bg-[#F5F5F7]" />}>
+      <DashboardShellContent>{children}</DashboardShellContent>
+    </Suspense>
   );
 }
