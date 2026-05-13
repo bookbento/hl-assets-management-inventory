@@ -6,6 +6,7 @@ import { BusinessUnitModule } from "./business-unit/business-unit.module";
 import { DepartmentModule } from "./department/department.module";
 import { EmployeeModule } from "./employee/employee.module";
 import { AssetModule } from "./asset/asset.module";
+import { LicenseModule } from "./license/license.module";
 import { ConfigModule } from "@nestjs/config";
 
 @Module({
@@ -17,6 +18,7 @@ import { ConfigModule } from "@nestjs/config";
     DepartmentModule,
     EmployeeModule,
     AssetModule,
+    LicenseModule,
   ],
   controllers: [],
   providers: [],

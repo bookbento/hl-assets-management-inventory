@@ -1,4 +1,10 @@
-import { PrismaClient, Role, AssetStatus, AssetCategory } from "@prisma/client";
+import {
+  PrismaClient,
+  Role,
+  AssetStatus,
+  AssetCategory,
+  LicenseStatus,
+} from "@prisma/client";
 import * as bcrypt from "bcryptjs";
 
 const prisma = new PrismaClient();
@@ -76,6 +82,21 @@ async function ensureActiveAssignment(assetId: string, employeeId: string) {
 
   return prisma.employee_Assets.create({
     data: { assetId, employeeId },
+  });
+}
+
+async function ensureLicenseAssignment(licenseId: string, employeeId: string) {
+  const existingAssignment = await prisma.licenseAssignment.findFirst({
+    where: {
+      licenseId,
+      employeeId,
+    },
+  });
+
+  if (existingAssignment) return existingAssignment;
+
+  return prisma.licenseAssignment.create({
+    data: { licenseId, employeeId },
   });
 }
 
@@ -221,7 +242,7 @@ async function main() {
   });
 
   const zenOrg = await getOrgIds("Tech", "Development", "Backend Developer");
-  await prisma.employee.upsert({
+  const zenEmployee = await prisma.employee.upsert({
     where: { email: "zen@a.com" },
     update: {
       name: "Zen Pandora",
@@ -236,7 +257,7 @@ async function main() {
   });
 
   const spriteOrg = await getOrgIds("Operations", "HR", "Recruiter");
-  await prisma.employee.upsert({
+  const spriteEmployee = await prisma.employee.upsert({
     where: { email: "sprite@a.com" },
     update: {
       name: "Sprite Pandora",
@@ -255,7 +276,7 @@ async function main() {
     "Development",
     "Full Stack Developer",
   );
-  await prisma.employee.upsert({
+  const mheeyaiEmployee = await prisma.employee.upsert({
     where: { email: "mheeyai@a.com" },
     update: {
       name: "Ei Mheeyai",
@@ -354,6 +375,160 @@ async function main() {
       warrantyExpiry: new Date("2026-05-31T00:00:00.000Z"),
     },
   });
+
+  // 4. Create Licenses
+  const adobeLicense = await prisma.license.upsert({
+    where: { name: "Adobe Creative Cloud" },
+    update: {
+      vendor: "Adobe",
+      type: "Subscription",
+      totalSeats: 50,
+      status: LicenseStatus.ACTIVE,
+      expiryDate: new Date("2026-12-15T00:00:00.000Z"),
+      price: "$2,400",
+      billingCycle: "Monthly",
+      annualCost: "$28,800",
+      color: "rose",
+    },
+    create: {
+      name: "Adobe Creative Cloud",
+      vendor: "Adobe",
+      type: "Subscription",
+      totalSeats: 50,
+      status: LicenseStatus.ACTIVE,
+      expiryDate: new Date("2026-12-15T00:00:00.000Z"),
+      price: "$2,400",
+      billingCycle: "Monthly",
+      annualCost: "$28,800",
+      color: "rose",
+    },
+  });
+
+  const microsoftLicense = await prisma.license.upsert({
+    where: { name: "Microsoft 365 Business" },
+    update: {
+      vendor: "Microsoft",
+      type: "Subscription",
+      totalSeats: 250,
+      status: LicenseStatus.ACTIVE,
+      expiryDate: new Date("2027-01-20T00:00:00.000Z"),
+      price: "$5,500",
+      billingCycle: "Annual",
+      annualCost: "$5,500",
+      color: "blue",
+    },
+    create: {
+      name: "Microsoft 365 Business",
+      vendor: "Microsoft",
+      type: "Subscription",
+      totalSeats: 250,
+      status: LicenseStatus.ACTIVE,
+      expiryDate: new Date("2027-01-20T00:00:00.000Z"),
+      price: "$5,500",
+      billingCycle: "Annual",
+      annualCost: "$5,500",
+      color: "blue",
+    },
+  });
+
+  const codexLicense = await prisma.license.upsert({
+    where: { name: "Codex" },
+    update: {
+      vendor: "OpenAI",
+      type: "Subscription",
+      totalSeats: 30,
+      status: LicenseStatus.ACTIVE,
+      expiryDate: new Date("2026-08-05T00:00:00.000Z"),
+      price: "$1,200",
+      billingCycle: "Monthly",
+      annualCost: "$14,400",
+      color: "indigo",
+    },
+    create: {
+      name: "Codex",
+      vendor: "OpenAI",
+      type: "Subscription",
+      totalSeats: 30,
+      status: LicenseStatus.ACTIVE,
+      expiryDate: new Date("2026-08-05T00:00:00.000Z"),
+      price: "$1,200",
+      billingCycle: "Monthly",
+      annualCost: "$14,400",
+      color: "indigo",
+    },
+  });
+
+  const claudeLicense = await prisma.license.upsert({
+    where: { name: "Claude" },
+    update: {
+      vendor: "Anthropic",
+      type: "Subscription",
+      totalSeats: 20,
+      status: LicenseStatus.WARNING,
+      expiryDate: new Date("2026-07-31T00:00:00.000Z"),
+      price: "$700",
+      billingCycle: "Monthly",
+      annualCost: "$8,400",
+      color: "emerald",
+    },
+    create: {
+      name: "Claude",
+      vendor: "Anthropic",
+      type: "Subscription",
+      totalSeats: 20,
+      status: LicenseStatus.WARNING,
+      expiryDate: new Date("2026-07-31T00:00:00.000Z"),
+      price: "$700",
+      billingCycle: "Monthly",
+      annualCost: "$8,400",
+      color: "emerald",
+    },
+  });
+
+  const awsLicense = await prisma.license.upsert({
+    where: { name: "AWS" },
+    update: {
+      vendor: "Amazon Web Services",
+      type: "Cloud Subscription",
+      totalSeats: 15,
+      status: LicenseStatus.CRITICAL,
+      expiryDate: new Date("2026-06-30T00:00:00.000Z"),
+      price: "$2,000",
+      billingCycle: "Monthly",
+      annualCost: "$24,000",
+      color: "amber",
+    },
+    create: {
+      name: "AWS",
+      vendor: "Amazon Web Services",
+      type: "Cloud Subscription",
+      totalSeats: 15,
+      status: LicenseStatus.CRITICAL,
+      expiryDate: new Date("2026-06-30T00:00:00.000Z"),
+      price: "$2,000",
+      billingCycle: "Monthly",
+      annualCost: "$24,000",
+      color: "amber",
+    },
+  });
+
+  await ensureLicenseAssignment(adobeLicense.id, adminEmployee.id);
+  await ensureLicenseAssignment(adobeLicense.id, regularUserEmployee.id);
+  await ensureLicenseAssignment(adobeLicense.id, mheeyaiEmployee.id);
+
+  await ensureLicenseAssignment(microsoftLicense.id, adminEmployee.id);
+  await ensureLicenseAssignment(microsoftLicense.id, regularUserEmployee.id);
+  await ensureLicenseAssignment(microsoftLicense.id, zenEmployee.id);
+
+  await ensureLicenseAssignment(codexLicense.id, zenEmployee.id);
+  await ensureLicenseAssignment(codexLicense.id, mheeyaiEmployee.id);
+
+  await ensureLicenseAssignment(claudeLicense.id, spriteEmployee.id);
+  await ensureLicenseAssignment(claudeLicense.id, adminEmployee.id);
+
+  await ensureLicenseAssignment(awsLicense.id, adminEmployee.id);
+  await ensureLicenseAssignment(awsLicense.id, regularUserEmployee.id);
+  await ensureLicenseAssignment(awsLicense.id, spriteEmployee.id);
 
   console.log("Seed data created successfully");
 }

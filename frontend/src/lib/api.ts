@@ -12,6 +12,45 @@ type EmployeeRecord = {
   [key: string]: any;
 };
 
+type LicenseAssignmentRecord = {
+  id: string;
+  assignedDate: string;
+  employee: {
+    id: string;
+    name: string;
+    email: string;
+    department?: { id: string; name: string } | null;
+    businessUnit?: { id: string; name: string } | null;
+  };
+};
+
+export type LicenseRecord = {
+  id: string;
+  name: string;
+  vendor: string;
+  type: string;
+  totalSeats: number;
+  status: "ACTIVE" | "WARNING" | "CRITICAL" | "EXPIRED";
+  expiryDate: string;
+  price: string;
+  billingCycle: string;
+  annualCost: string;
+  color: string;
+  usedSeats: number;
+  availableSeats: number;
+  usagePercent: number;
+  assignments: LicenseAssignmentRecord[];
+};
+
+export type LicenseSummary = {
+  total: number;
+  active: number;
+  expiringSoon: number;
+  assignedSeats: number;
+  availableSeats: number;
+  annualCostTotal: number;
+};
+
 const authenticatedFetch = async (url: string, options: RequestInit = {}) => {
   const session: any = await getSession();
   const headers = new Headers(options.headers || {});
@@ -137,6 +176,64 @@ export const getAssetSummary = async (): Promise<any> => {
     throw new Error("Failed to fetch asset summary");
   }
   return res.json();
+};
+
+export const getLicenses = async (): Promise<LicenseRecord[]> => {
+  const res = await authenticatedFetch(`${API_URL}/licenses`);
+  if (!res.ok) {
+    throw new Error("Failed to fetch licenses");
+  }
+  return res.json();
+};
+
+export const getLicenseSummary = async (): Promise<LicenseSummary> => {
+  const res = await authenticatedFetch(`${API_URL}/licenses/summary`);
+  if (!res.ok) {
+    throw new Error("Failed to fetch license summary");
+  }
+  return res.json();
+};
+
+export const getLicenseById = async (id: string): Promise<LicenseRecord> => {
+  const res = await authenticatedFetch(`${API_URL}/licenses/${id}`);
+  if (!res.ok) {
+    throw new Error("Failed to fetch license");
+  }
+  return res.json();
+};
+
+export const createLicense = async (payload: Record<string, any>): Promise<LicenseRecord> => {
+  return submitPayload<LicenseRecord>(`${API_URL}/licenses`, payload, "POST");
+};
+
+export const updateLicense = async (
+  id: string,
+  payload: Record<string, any>,
+): Promise<LicenseRecord> => {
+  return submitPayload<LicenseRecord>(`${API_URL}/licenses/${id}`, payload, "PATCH");
+};
+
+export const deleteLicense = async (id: string): Promise<void> => {
+  const res = await authenticatedFetch(`${API_URL}/licenses/${id}`, {
+    method: "DELETE",
+  });
+  if (!res.ok) {
+    throw new Error("Failed to delete license");
+  }
+};
+
+export const assignLicense = async (
+  id: string,
+  payload: { employeeId: string },
+): Promise<any> => {
+  return submitPayload<any>(`${API_URL}/licenses/${id}/assign`, payload, "POST");
+};
+
+export const unassignLicense = async (
+  id: string,
+  payload: { assignmentId: string },
+): Promise<any> => {
+  return submitPayload<any>(`${API_URL}/licenses/${id}/unassign`, payload, "POST");
 };
 
 export const getEmployees = async (): Promise<EmployeeRecord[]> => {
