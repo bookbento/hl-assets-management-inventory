@@ -338,8 +338,8 @@ export default function LicensesPage() {
             {isLoading ? (
               <div className="flex min-h-[420px] items-center justify-center rounded-2xl border border-slate-200 bg-white shadow-sm dark:border-slate-800 dark:bg-slate-950">
                 <div className="text-center">
-                  <Loader2 className="mx-auto h-8 w-8 animate-spin text-blue-600" />
-                  <p className="mt-3 text-sm text-slate-500">Loading licenses...</p>
+                  <Loader2 className="mx-auto h-8 w-8 animate-spin text-primary" />
+                  <p className="mt-3 text-sm text-[#86868B]">Loading licenses...</p>
                 </div>
               </div>
             ) : error ? (
@@ -399,7 +399,7 @@ export default function LicensesPage() {
                 </div>
 
                 <div className="rounded-2xl border border-slate-200 bg-white shadow-sm dark:border-slate-800 dark:bg-slate-950">
-                  <div className="border-b border-slate-100 p-6 dark:border-slate-800">
+                  <div className="border-b border-[#D2D2D7] p-6 dark:border-slate-800">
                     <div className="relative max-w-md">
                       <Search className="absolute left-3 top-2.5 h-4 w-4 text-slate-400" />
                       <input
@@ -413,8 +413,8 @@ export default function LicensesPage() {
                   </div>
 
                   <div className="overflow-x-auto">
-                    <table className="w-full text-left text-sm text-slate-900 dark:text-white">
-                      <thead className="bg-slate-50/50 text-xs font-bold uppercase tracking-wider text-slate-500 dark:bg-slate-900/50">
+                    <table className="w-full text-left text-sm">
+                      <thead className="bg-gray-50/50 text-xs font-bold border-b border-[#D2D2D7] uppercase tracking-tight text-[#86868B] dark:bg-slate-900/50">
                         <tr>
                           <th className="px-6 py-4">Software & Vendor</th>
                           <th className="px-6 py-4">Type</th>
@@ -425,7 +425,7 @@ export default function LicensesPage() {
                           <th className="px-6 py-4 text-right">Actions</th>
                         </tr>
                       </thead>
-                      <tbody className="divide-y divide-slate-100 dark:divide-slate-800">
+                      <tbody className="divide-y divide-[#D2D2D7]">
                         {filteredLicenses.map((license) => {
                           // Calculate status based on usage and expiry
                           const getCalculatedStatus = () => {
@@ -572,10 +572,10 @@ export default function LicensesPage() {
               animate={{ x: 0 }}
               exit={{ x: "100%" }}
               transition={{ type: "spring", damping: 25, stiffness: 200 }}
-              className="fixed right-0 top-0 z-50 h-screen w-full max-w-lg border-l border-slate-200 bg-white shadow-2xl dark:border-slate-800 dark:bg-slate-950"
+              className="fixed right-0 top-0 z-50 h-screen w-full max-w-lg border-l border-[#D2D2D7] bg-white shadow-2xl dark:border-slate-800 dark:bg-slate-950"
             >
               <div className="flex h-full flex-col">
-                <div className="flex items-center justify-between border-b border-slate-100 p-6 dark:border-slate-800">
+                <div className="flex items-center justify-between border-b border-[#D2D2D7] p-6 dark:border-slate-800">
                   <div className="flex items-center gap-3">
                     <div
                       className={cn(
@@ -642,20 +642,20 @@ export default function LicensesPage() {
                       {(() => {
                         const now = new Date();
                         const expiry = new Date(selectedLicense.expiryDate);
-                        const calcStatus = expiry < now ? "EXPIRED" : 
-                                         selectedLicense.usedSeats >= selectedLicense.totalSeats ? "CRITICAL" :
-                                         selectedLicense.usagePercent >= 90 ? "WARNING" : "ACTIVE";
+                        const calcStatus = expiry < now ? "EXPIRED" :
+                          selectedLicense.usedSeats >= selectedLicense.totalSeats ? "CRITICAL" :
+                            selectedLicense.usagePercent >= 90 ? "WARNING" : "ACTIVE";
                         const dMeta = statusMeta[calcStatus];
-                        
+
                         return (
                           <div className="flex justify-between text-sm">
                             <span className="flex items-center gap-2 text-slate-500">
                               <ShieldCheck className="h-4 w-4" /> Status
                             </span>
-                            <span className={cn("font-bold", 
+                            <span className={cn("font-bold",
                               calcStatus === "ACTIVE" ? "text-emerald-600" :
-                              calcStatus === "WARNING" ? "text-amber-600" :
-                              calcStatus === "CRITICAL" ? "text-rose-600" : "text-slate-500"
+                                calcStatus === "WARNING" ? "text-amber-600" :
+                                  calcStatus === "CRITICAL" ? "text-rose-600" : "text-slate-500"
                             )}>
                               {dMeta.label}
                             </span>

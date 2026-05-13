@@ -1,5 +1,8 @@
 import "./../styles/globals.css";
 import type { Metadata } from "next";
+import { Inter } from "next/font/google";
+
+const inter = Inter({ subsets: ["latin"] });
 import { QueryProvider } from "@/lib/query-provider";
 import { AuthProvider } from "@/lib/auth-provider";
 import { Toaster } from "react-hot-toast";
@@ -19,7 +22,7 @@ export default function RootLayout({
 }) {
   return (
     <html lang="en">
-      <body suppressHydrationWarning>
+      <body className={inter.className} suppressHydrationWarning>
         <QueryProvider>
           <AuthProvider>
             {children}
