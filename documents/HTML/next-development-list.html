@@ -1,0 +1,229 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>แผนพัฒนาระบบ IT Assets</title>
+
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+      font-family: 'Segoe UI', sans-serif;
+    }
+
+    body {
+      min-height: 100vh;
+      background: linear-gradient(135deg, #0f172a, #1e293b, #334155);
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      padding: 40px;
+      color: white;
+      overflow-x: hidden;
+    }
+
+    body::before {
+      content: "";
+      position: absolute;
+      width: 300px;
+      height: 300px;
+      background: rgba(59,130,246,0.3);
+      border-radius: 50%;
+      top: 10%;
+      left: 10%;
+      filter: blur(100px);
+    }
+
+    body::after {
+      content: "";
+      position: absolute;
+      width: 300px;
+      height: 300px;
+      background: rgba(168,85,247,0.3);
+      border-radius: 50%;
+      bottom: 10%;
+      right: 10%;
+      filter: blur(100px);
+    }
+
+    .container {
+      width: 100%;
+      max-width: 1200px;
+      position: relative;
+      z-index: 2;
+    }
+
+    .header {
+      text-align: center;
+      margin-bottom: 40px;
+    }
+
+    .header h1 {
+      font-size: 2.5rem;
+      margin-bottom: 10px;
+    }
+
+    .header p {
+      color: rgba(255,255,255,0.7);
+    }
+
+    .grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+      gap: 20px;
+    }
+
+    .card {
+      background: rgba(255,255,255,0.08);
+      backdrop-filter: blur(20px);
+      -webkit-backdrop-filter: blur(20px);
+      border: 1px solid rgba(255,255,255,0.15);
+      border-radius: 20px;
+      padding: 25px;
+      box-shadow: 0 8px 32px rgba(0,0,0,0.3);
+      transition: 0.3s ease;
+    }
+
+    .card:hover {
+      transform: translateY(-8px);
+      background: rgba(255,255,255,0.12);
+    }
+
+    .badge {
+      display: inline-block;
+      padding: 6px 14px;
+      border-radius: 999px;
+      background: rgba(34,197,94,0.2);
+      border: 1px solid rgba(34,197,94,0.4);
+      font-size: 0.8rem;
+      margin-bottom: 15px;
+    }
+
+    .card h2 {
+      margin-bottom: 12px;
+      font-size: 1.2rem;
+    }
+
+    .card ul {
+      padding-left: 20px;
+      color: rgba(255,255,255,0.8);
+    }
+
+    .card li {
+      margin-bottom: 8px;
+    }
+
+    .recommend {
+      margin-top: 40px;
+      background: rgba(255,255,255,0.08);
+      backdrop-filter: blur(20px);
+      border-radius: 20px;
+      padding: 30px;
+      border: 1px solid rgba(255,255,255,0.15);
+      text-align: center;
+    }
+
+    .recommend h2 {
+      margin-bottom: 10px;
+      color: #facc15;
+    }
+
+    @media (max-width: 768px) {
+      .header h1 {
+        font-size: 2rem;
+      }
+    }
+  </style>
+</head>
+<body>
+
+  <div class="container">
+    <div class="header">
+      <h1>🚀 แผนพัฒนาระบบ</h1>
+      <p>สิ่งที่ควรพัฒนาต่อเพื่อให้ระบบพร้อมใช้งานจริงระดับ Production</p>
+    </div>
+
+    <div class="grid">
+      <div class="card">
+        <div class="badge">ลำดับ 1</div>
+        <h2>🎫 ระบบ Tickets</h2>
+        <ul>
+          <li>สร้าง Ticket</li>
+          <li>Assign งาน</li>
+          <li>Approve / Reject</li>
+          <li>Comment</li>
+          <li>แนบไฟล์และประวัติ</li>
+        </ul>
+      </div>
+
+      <div class="card">
+        <div class="badge">ลำดับ 2</div>
+        <h2>💳 ระบบ Licenses</h2>
+        <ul>
+          <li>CRUD License</li>
+          <li>Seat Assignment</li>
+          <li>วันหมดอายุ</li>
+          <li>Vendor</li>
+          <li>ค่าใช้จ่าย</li>
+        </ul>
+      </div>
+
+      <div class="card">
+        <div class="badge">ลำดับ 3</div>
+        <h2>🖥 Asset Lifecycle</h2>
+        <ul>
+          <li>Assigned</li>
+          <li>In Use</li>
+          <li>Maintenance</li>
+          <li>Retired</li>
+          <li>ประวัติการย้ายเครื่อง</li>
+        </ul>
+      </div>
+
+      <div class="card">
+        <div class="badge">ลำดับ 4</div>
+        <h2>🔔 Notifications & Logs</h2>
+        <ul>
+          <li>แจ้งเตือน Warranty</li>
+          <li>แจ้งเตือน License</li>
+          <li>Audit Logs</li>
+        </ul>
+      </div>
+
+      <div class="card">
+        <div class="badge">ลำดับ 5</div>
+        <h2>🔍 Search & Export</h2>
+        <ul>
+          <li>Advanced Filter</li>
+          <li>Preset View</li>
+          <li>Export CSV</li>
+          <li>Export PDF</li>
+        </ul>
+      </div>
+
+      <div class="card">
+        <div class="badge">ลำดับ 6</div>
+        <h2>⚙️ Settings</h2>
+        <ul>
+          <li>แก้ไข Profile</li>
+          <li>เปลี่ยน Password</li>
+          <li>Notification Preference</li>
+          <li>2FA</li>
+        </ul>
+      </div>
+    </div>
+
+    <div class="recommend">
+      <h2>💡 ข้อแนะนำ</h2>
+      <p>
+        ควรเริ่มจาก <strong>ระบบ Tickets</strong> ก่อน เพราะเป็น workflow สำคัญที่สุด
+        และตอนนี้ยังไม่มี backend จริงรองรับ
+        หากทำเสร็จ ระบบจะดู complete และ production-ready มากขึ้นทันที
+      </p>
+    </div>
+  </div>
+
+</body>
+</html>

@@ -5,8 +5,11 @@ import { AuthProvider } from "@/lib/auth-provider";
 import { Toaster } from "react-hot-toast";
 
 export const metadata: Metadata = {
-  title: "IT Asset Management",
-  description: "Manage your IT assets efficiently",
+  title: "CoreDesk",
+  description: "IT Asset Management",
+  icons: {
+    icon: "/favicon.ico",
+  }
 };
 
 export default function RootLayout({
@@ -16,7 +19,7 @@ export default function RootLayout({
 }) {
   return (
     <html lang="en">
-      <body>
+      <body suppressHydrationWarning>
         <QueryProvider>
           <AuthProvider>
             {children}
