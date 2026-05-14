@@ -8,7 +8,15 @@ import { useRouter, useSearchParams, usePathname } from "next/navigation";
 import { useState, useEffect } from "react";
 import { Drawer, DrawerContent, DrawerTrigger } from "@/components/ui/drawer";
 
-function DashboardShellContent({ children }: { children: React.ReactNode }) {
+function DashboardShellContent({ 
+  children,
+  title = "System Overview",
+  description = "Manage and track company hardware assets."
+}: { 
+  children: React.ReactNode;
+  title?: string;
+  description?: string;
+}) {
   const router = useRouter();
   const searchParams = useSearchParams();
   const [searchQuery, setSearchQuery] = useState("");
@@ -21,13 +29,18 @@ function DashboardShellContent({ children }: { children: React.ReactNode }) {
 
   const handleSearch = (e: React.KeyboardEvent<HTMLInputElement>) => {
     if (e.key === "Enter") {
-      const baseRoute = pathname.startsWith("/employees") ? "/employees" : "/assets";
       if (searchQuery.trim()) {
-        router.push(`${baseRoute}?search=${encodeURIComponent(searchQuery.trim())}`);
+        router.push(`${pathname}?search=${encodeURIComponent(searchQuery.trim())}`);
       } else {
-        router.push(baseRoute);
+        router.push(pathname);
       }
     }
+  };
+
+  const getPlaceholder = () => {
+    if (pathname.startsWith("/employees")) return "Search employees...";
+    if (pathname.startsWith("/licenses")) return "Search licenses...";
+    return "Search assets...";
   };
 
   return (
@@ -62,11 +75,11 @@ function DashboardShellContent({ children }: { children: React.ReactNode }) {
 
               <div className="text-left">
                 <h1 className="text-xl sm:text-2xl md:text-3xl font-bold tracking-tight text-[#1D1D1F]">
-                  System Overview
+                  {title}
                 </h1>
 
                 <p className="text-xs sm:text-sm text-[#86868B] hidden xs:block">
-                  Manage and track company hardware assets.
+                  {description}
                 </p>
               </div>
             </div>
@@ -80,7 +93,7 @@ function DashboardShellContent({ children }: { children: React.ReactNode }) {
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
                   onKeyDown={handleSearch}
-                  placeholder={pathname.startsWith("/employees") ? "Search employees..." : "Search assets..."}
+                  placeholder={getPlaceholder()}
                   className="w-full bg-white border border-[#D2D2D7] rounded-full py-2 sm:py-2.5 pl-10 pr-4 text-sm focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all shadow-sm"
                 />
               </div>
@@ -113,10 +126,18 @@ function DashboardShellContent({ children }: { children: React.ReactNode }) {
   );
 }
 
-export function DashboardShell({ children }: { children: React.ReactNode }) {
+export function DashboardShell({ 
+  children,
+  title,
+  description
+}: { 
+  children: React.ReactNode;
+  title?: string;
+  description?: string;
+}) {
   return (
     <Suspense fallback={<div className="min-h-screen bg-[#F5F5F7]" />}>
-      <DashboardShellContent>{children}</DashboardShellContent>
+      <DashboardShellContent title={title} description={description}>{children}</DashboardShellContent>
     </Suspense>
   );
 }

@@ -49,6 +49,7 @@ interface AssetFormProps {
     initialData?: Partial<AssetFormValues> & { imageUrl?: string | null };
     title?: string;
     isModal?: boolean;
+    employees?: any[];
 }
 
 export function AssetForm({
@@ -56,7 +57,8 @@ export function AssetForm({
     onSubmit,
     initialData,
     title = "Add New Asset",
-    isModal = true
+    isModal = true,
+    employees = []
 }: AssetFormProps) {
     const fileInputRef = useRef<HTMLInputElement>(null);
     const [selectedFile, setSelectedFile] = useState<File | null>(null);
@@ -70,6 +72,8 @@ export function AssetForm({
         register,
         handleSubmit,
         reset,
+        watch,
+        setValue,
         formState: { errors, isSubmitting },
     } = useForm<AssetFormValues>({
         resolver: zodResolver(assetSchema),
@@ -87,6 +91,42 @@ export function AssetForm({
             setRemoveExistingImage(false);
         }
     }, [initialData, reset]);
+
+    const [searchUser, setSearchUser] = useState('');
+    const [isDropdownOpen, setIsDropdownOpen] = useState(false);
+    const dropdownRef = useRef<HTMLDivElement>(null);
+
+    const assignedToValue = watch('assignedTo');
+    const selectedEmployee = useMemo(() => 
+        employees?.find(e => e.id === assignedToValue)
+    , [employees, assignedToValue]);
+
+    useEffect(() => {
+        if (selectedEmployee) {
+            setSearchUser(selectedEmployee.name);
+        } else {
+            setSearchUser('');
+        }
+    }, [selectedEmployee]);
+
+    const filteredEmployees = useMemo(() => 
+        employees?.filter(e => e.name.toLowerCase().includes(searchUser.toLowerCase())) || []
+    , [employees, searchUser]);
+
+    useEffect(() => {
+        const handleClickOutside = (event: MouseEvent) => {
+            if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node)) {
+                setIsDropdownOpen(false);
+                if (selectedEmployee) {
+                    setSearchUser(selectedEmployee.name);
+                } else {
+                    setSearchUser('');
+                }
+            }
+        };
+        document.addEventListener("mousedown", handleClickOutside);
+        return () => document.removeEventListener("mousedown", handleClickOutside);
+    }, [selectedEmployee]);
 
     useEffect(() => {
         if (!selectedFile) return;
@@ -257,13 +297,46 @@ export function AssetForm({
                             />
                         </div>
 
-                        <div>
+                        <div ref={dropdownRef} className="relative">
                             <label className="block text-[10px] font-bold uppercase tracking-wider text-[var(--muted-foreground)] mb-1.5">Assigned To</label>
                             <input
-                                {...register('assignedTo')}
-                                placeholder="User Name"
+                                type="text"
+                                value={searchUser}
+                                onChange={(e) => {
+                                    setSearchUser(e.target.value);
+                                    setIsDropdownOpen(true);
+                                }}
+                                onFocus={() => setIsDropdownOpen(true)}
+                                placeholder="Search and select user..."
                                 className="w-full bg-[var(--surface-soft)] border border-[var(--border)] rounded-lg px-4 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all"
                             />
+                            {isDropdownOpen && (
+                                <div className="absolute z-10 w-full mt-1 bg-white border border-[var(--border)] rounded-lg shadow-lg max-h-48 overflow-y-auto">
+                                    <div 
+                                       className="px-4 py-2 hover:bg-gray-100 cursor-pointer text-sm text-[var(--foreground)]"
+                                       onClick={() => {
+                                           setValue('assignedTo', '', { shouldDirty: true });
+                                           setSearchUser('');
+                                           setIsDropdownOpen(false);
+                                       }}
+                                    >
+                                       Unassigned
+                                    </div>
+                                    {filteredEmployees.map((emp: any) => (
+                                        <div 
+                                            key={emp.id}
+                                            className="px-4 py-2 hover:bg-gray-100 cursor-pointer text-sm text-[var(--foreground)]"
+                                            onClick={() => {
+                                                setValue('assignedTo', emp.id, { shouldDirty: true });
+                                                setSearchUser(emp.name);
+                                                setIsDropdownOpen(false);
+                                            }}
+                                        >
+                                            {emp.name}
+                                        </div>
+                                    ))}
+                                </div>
+                            )}
                         </div>
 
                         <div className="grid grid-cols-2 gap-4">

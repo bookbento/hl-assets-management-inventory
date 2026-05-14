@@ -83,15 +83,13 @@ export default function AssetsPage() {
 
   return (
     <Suspense fallback={<div className="min-h-[200px]" />}>
-      <DashboardShell>
-        <div className="flex items-center justify-between mb-8">
-          <div className="text-left">
-            <h1 className="text-3xl font-bold tracking-tight mb-1">
-              Assets Inventory
-            </h1>
-            <p className="text-[#86868B]">
-              Manage, track and maintain your organization's IT assets.
-            </p>
+      <DashboardShell
+        title="Assets Inventory"
+        description="Manage, track and maintain your organization's IT assets."
+      >
+        <div className="flex justify-between items-center mb-8">
+          <div className="text-primary">
+            <span className="ml-1 text-sm">Manage employee assets: add, edit, and delete assets.</span>
           </div>
           <div className="flex gap-3">
             <button
@@ -99,12 +97,18 @@ export default function AssetsPage() {
               disabled={isExporting}
               className="flex items-center gap-2 px-4 py-2 border border-[#D2D2D7] bg-white rounded-lg text-sm font-medium hover:bg-gray-50 transition-colors shadow-sm active:scale-95 disabled:opacity-50"
             >
-              {isExporting ? <Loader2 className="w-4 h-4 animate-spin" /> : <FileUp className="w-4 h-4" />}
-              <span>{isExporting ? "Exporting..." : "Export Inventory"}</span>
+              {isExporting ? (
+                <Loader2 className="w-4 h-4 animate-spin" />
+              ) : (
+                <FileUp className="w-4 h-4" />
+              )}
+              <span>{isExporting ? "Exporting..." : "Export CSV"}</span>
             </button>
+
             <button
               onClick={() => setShowForm(true)}
-              className="btn-primary flex items-center gap-2 shadow-md shadow-primary/20">
+              className="btn-primary flex items-center gap-2 shadow-md shadow-primary/20"
+            >
               <Plus className="w-4 h-4" />
               <span>Add Asset</span>
             </button>

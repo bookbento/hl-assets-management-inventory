@@ -1,19 +1,18 @@
 "use client";
 
+import { DashboardShell } from "@/components/layout/DashboardShell";
 import { useEffect, useMemo, useState } from "react";
-import { Sidebar } from "@/components/layout/Sidebar";
 import {
   AlertTriangle,
   Calendar,
   Check,
   DollarSign,
-  Download,
+  FileUp,
   Edit,
   Key,
   Loader2,
   Plus,
   Pencil,
-  Search,
   ShieldCheck,
   Trash2,
   Users,
@@ -21,7 +20,10 @@ import {
 } from "lucide-react";
 import { AnimatePresence, motion } from "framer-motion";
 import { cn } from "@/lib/utils";
+import { LicenseForm } from "@/components/licenses/LicenseForm";
+import { LicenseTable } from "@/components/licenses/LicenseTable";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { useSearchParams } from "next/navigation";
 import {
   assignLicense,
   deleteLicense,
@@ -123,12 +125,14 @@ const emptyFormState = (license: LicenseRecord): LicenseFormState => ({
 
 export default function LicensesPage() {
   const queryClient = useQueryClient();
-  const [searchTerm, setSearchTerm] = useState("");
+  const searchParams = useSearchParams();
+  const searchTerm = searchParams?.get("search") || "";
   const [selectedLicenseId, setSelectedLicenseId] = useState<string | null>(null);
   const [editingLicenseId, setEditingLicenseId] = useState<string | null>(null);
   const [assigningLicenseId, setAssigningLicenseId] = useState<string | null>(null);
   const [editingForm, setEditingForm] = useState<LicenseFormState | null>(null);
   const [selectedEmployeeId, setSelectedEmployeeId] = useState("");
+  const [showForm, setShowForm] = useState(false);
 
   const { data: licenses = [], isLoading, error } = useQuery({
     queryKey: ["licenses"],
@@ -311,250 +315,107 @@ export default function LicensesPage() {
     : [];
 
   return (
-    <div className="flex min-h-screen w-full bg-slate-50 text-slate-900 dark:bg-slate-900 dark:text-slate-50">
-      <Sidebar />
-      <div className="flex min-h-screen w-full flex-col sm:pl-64">
-        <main className="flex-1 p-4 sm:p-8">
-          <div className="mx-auto max-w-7xl space-y-8">
-            <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-              <div>
-                <h1 className="text-2xl font-bold tracking-tight text-slate-900 dark:text-white sm:text-3xl">
-                  Software Licenses
-                </h1>
-                <p className="text-sm text-slate-500 dark:text-slate-400">
-                  Live data from backend licenses table.
+    <DashboardShell
+      title="Software Licenses"
+      description="Live data from backend licenses table."
+    >
+      <div className="space-y-8">
+        <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+          <div className="text-primary">
+            <span className="ml-1 text-sm">
+              Manage the licenses: add, edit, and delete licenses.
+            </span>
+          </div>
+          <div className="flex items-center gap-3">
+            <button
+              className="btn-primary flex items-center gap-2"
+              onClick={() => setShowForm(true)}>
+              <Plus className="w-4 h-4" />
+              <span>Add License</span>
+            </button>
+            <button
+              onClick={handleExport}
+              className="flex items-center gap-2 rounded-xl border border-slate-200 bg-white px-4 py-2 text-sm font-semibold text-slate-700 shadow-sm transition-colors hover:bg-slate-50 dark:border-slate-800 dark:bg-slate-950 dark:text-white"
+            >
+              <FileUp className="h-4 w-4" /> Export
+            </button>
+          </div>
+        </div>
+
+        {isLoading ? (
+          <div className="flex min-h-[420px] items-center justify-center rounded-2xl border border-slate-200 bg-white shadow-sm dark:border-slate-800 dark:bg-slate-950">
+            <div className="text-center">
+              <Loader2 className="mx-auto h-8 w-8 animate-spin text-primary" />
+              <p className="mt-3 text-sm text-[#86868B]">Loading licenses...</p>
+            </div>
+          </div>
+        ) : error ? (
+          <div className="flex min-h-[420px] items-center justify-center rounded-2xl border border-rose-200 bg-rose-50/50 shadow-sm dark:border-rose-900/40 dark:bg-rose-950/20">
+            <div className="text-center">
+              <AlertTriangle className="mx-auto h-8 w-8 text-rose-500" />
+              <p className="mt-3 text-sm font-semibold text-rose-700 dark:text-rose-300">
+                Failed to load licenses
+              </p>
+            </div>
+          </div>
+        ) : (
+          <>
+            <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-4">
+              <div className="rounded-2xl border border-emerald-100 bg-emerald-50/30 p-5 dark:border-emerald-900/30 dark:bg-emerald-900/10">
+                <div className="flex items-center justify-between text-emerald-600 dark:text-emerald-400">
+                  <p className="text-xs font-bold uppercase tracking-wider">Total Licenses</p>
+                  <ShieldCheck className="h-5 w-5" />
+                </div>
+                <h2 className="mt-2 text-3xl font-bold text-slate-900 dark:text-white">
+                  {summary?.total ?? licenses.length}
+                </h2>
+                <p className="mt-1 text-xs text-emerald-600">Across all vendors</p>
+              </div>
+              <div className="rounded-2xl border border-rose-100 bg-rose-50/30 p-5 dark:border-rose-900/30 dark:bg-rose-900/10">
+                <div className="flex items-center justify-between text-rose-600 dark:text-rose-400">
+                  <p className="text-xs font-bold uppercase tracking-wider">Expiring Soon</p>
+                  <AlertTriangle className="h-5 w-5" />
+                </div>
+                <h2 className="mt-2 text-3xl font-bold text-slate-900 dark:text-white">
+                  {summary?.expiringSoon ?? 0}
+                </h2>
+                <p className="mt-1 text-xs text-rose-600">Next 30 days</p>
+              </div>
+              <div className="rounded-2xl border border-blue-100 bg-blue-50/30 p-5 dark:border-blue-900/30 dark:bg-blue-900/10">
+                <div className="flex items-center justify-between text-blue-600 dark:text-blue-400">
+                  <p className="text-xs font-bold uppercase tracking-wider">Assigned Seats</p>
+                  <Key className="h-5 w-5" />
+                </div>
+                <h2 className="mt-2 text-3xl font-bold text-slate-900 dark:text-white">
+                  {summary?.assignedSeats ?? 0}
+                </h2>
+                <p className="mt-1 text-xs text-blue-600">
+                  {summary?.availableSeats ?? 0} seats available
                 </p>
               </div>
-              <div className="flex items-center gap-3">
-                <button
-                  onClick={handleExport}
-                  className="flex items-center gap-2 rounded-xl border border-slate-200 bg-white px-4 py-2 text-sm font-semibold text-slate-700 shadow-sm transition-colors hover:bg-slate-50 dark:border-slate-800 dark:bg-slate-950 dark:text-white"
-                >
-                  <Download className="h-4 w-4" /> Export
-                </button>
+              <div className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm dark:border-slate-800 dark:bg-slate-950">
+                <div className="flex items-center justify-between text-indigo-500">
+                  <p className="text-xs font-bold uppercase tracking-wider">Annual cost</p>
+                  <DollarSign className="h-5 w-5" />
+                </div>
+                <h2 className="mt-2 text-2xl font-bold text-slate-900 dark:text-white">
+                  {formatMoney(summary?.annualCostTotal ?? 0)}
+                </h2>
+                <p className="mt-1 text-xs text-slate-500">Projected expenditure</p>
               </div>
             </div>
 
-            {isLoading ? (
-              <div className="flex min-h-[420px] items-center justify-center rounded-2xl border border-slate-200 bg-white shadow-sm dark:border-slate-800 dark:bg-slate-950">
-                <div className="text-center">
-                  <Loader2 className="mx-auto h-8 w-8 animate-spin text-primary" />
-                  <p className="mt-3 text-sm text-[#86868B]">Loading licenses...</p>
-                </div>
-              </div>
-            ) : error ? (
-              <div className="flex min-h-[420px] items-center justify-center rounded-2xl border border-rose-200 bg-rose-50/50 shadow-sm dark:border-rose-900/40 dark:bg-rose-950/20">
-                <div className="text-center">
-                  <AlertTriangle className="mx-auto h-8 w-8 text-rose-500" />
-                  <p className="mt-3 text-sm font-semibold text-rose-700 dark:text-rose-300">
-                    Failed to load licenses
-                  </p>
-                </div>
-              </div>
-            ) : (
-              <>
-                <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-4">
-                  <div className="rounded-2xl border border-emerald-100 bg-emerald-50/30 p-5 dark:border-emerald-900/30 dark:bg-emerald-900/10">
-                    <div className="flex items-center justify-between text-emerald-600 dark:text-emerald-400">
-                      <p className="text-xs font-bold uppercase tracking-wider">Total Licenses</p>
-                      <ShieldCheck className="h-5 w-5" />
-                    </div>
-                    <h2 className="mt-2 text-3xl font-bold text-slate-900 dark:text-white">
-                      {summary?.total ?? licenses.length}
-                    </h2>
-                    <p className="mt-1 text-xs text-emerald-600">Across all vendors</p>
-                  </div>
-                  <div className="rounded-2xl border border-rose-100 bg-rose-50/30 p-5 dark:border-rose-900/30 dark:bg-rose-900/10">
-                    <div className="flex items-center justify-between text-rose-600 dark:text-rose-400">
-                      <p className="text-xs font-bold uppercase tracking-wider">Expiring Soon</p>
-                      <AlertTriangle className="h-5 w-5" />
-                    </div>
-                    <h2 className="mt-2 text-3xl font-bold text-slate-900 dark:text-white">
-                      {summary?.expiringSoon ?? 0}
-                    </h2>
-                    <p className="mt-1 text-xs text-rose-600">Next 30 days</p>
-                  </div>
-                  <div className="rounded-2xl border border-blue-100 bg-blue-50/30 p-5 dark:border-blue-900/30 dark:bg-blue-900/10">
-                    <div className="flex items-center justify-between text-blue-600 dark:text-blue-400">
-                      <p className="text-xs font-bold uppercase tracking-wider">Assigned Seats</p>
-                      <Key className="h-5 w-5" />
-                    </div>
-                    <h2 className="mt-2 text-3xl font-bold text-slate-900 dark:text-white">
-                      {summary?.assignedSeats ?? 0}
-                    </h2>
-                    <p className="mt-1 text-xs text-blue-600">
-                      {summary?.availableSeats ?? 0} seats available
-                    </p>
-                  </div>
-                  <div className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm dark:border-slate-800 dark:bg-slate-950">
-                    <div className="flex items-center justify-between text-indigo-500">
-                      <p className="text-xs font-bold uppercase tracking-wider">Annual cost</p>
-                      <DollarSign className="h-5 w-5" />
-                    </div>
-                    <h2 className="mt-2 text-2xl font-bold text-slate-900 dark:text-white">
-                      {formatMoney(summary?.annualCostTotal ?? 0)}
-                    </h2>
-                    <p className="mt-1 text-xs text-slate-500">Projected expenditure</p>
-                  </div>
-                </div>
-
-                <div className="rounded-2xl border border-slate-200 bg-white shadow-sm dark:border-slate-800 dark:bg-slate-950">
-                  <div className="border-b border-[#D2D2D7] p-6 dark:border-slate-800">
-                    <div className="relative max-w-md">
-                      <Search className="absolute left-3 top-2.5 h-4 w-4 text-slate-400" />
-                      <input
-                        type="text"
-                        placeholder="Search by vendor, software name, type, or status..."
-                        value={searchTerm}
-                        onChange={(e) => setSearchTerm(e.target.value)}
-                        className="w-full bg-white border border-[#D2D2D7] rounded-full py-1.5 pl-11 pr-5 text-sm focus:outline-none focus:ring-2 focus:ring-primary/20"
-                      />
-                    </div>
-                  </div>
-
-                  <div className="overflow-x-auto">
-                    <table className="w-full text-left text-sm">
-                      <thead className="bg-gray-50/50 text-xs font-bold border-b border-[#D2D2D7] uppercase tracking-tight text-[#86868B] dark:bg-slate-900/50">
-                        <tr>
-                          <th className="px-6 py-4">Software & Vendor</th>
-                          <th className="px-6 py-4">Type</th>
-                          <th className="px-6 py-4 text-center">Seats Usage</th>
-                          <th className="px-6 py-4">Status</th>
-                          <th className="px-6 py-4">Annual Cost</th>
-                          <th className="px-6 py-4">Expiry</th>
-                          <th className="px-6 py-4 text-right">Actions</th>
-                        </tr>
-                      </thead>
-                      <tbody className="divide-y divide-[#D2D2D7]">
-                        {filteredLicenses.map((license) => {
-                          // Calculate status based on usage and expiry
-                          const getCalculatedStatus = () => {
-                            const now = new Date();
-                            const expiry = new Date(license.expiryDate);
-                            if (expiry < now) return "EXPIRED";
-                            if (license.usedSeats >= license.totalSeats) return "CRITICAL";
-                            if (license.usagePercent >= 90) return "WARNING";
-                            return "ACTIVE";
-                          };
-
-                          const currentStatus = getCalculatedStatus();
-                          const meta = statusMeta[currentStatus];
-
-                          return (
-                            <tr
-                              key={license.id}
-                              onClick={() => setSelectedLicenseId(license.id)}
-                              className="group cursor-pointer transition-colors hover:bg-slate-50 dark:hover:bg-slate-900/50"
-                            >
-                              <td className="px-6 py-5">
-                                <div className="flex items-center gap-3">
-                                  <div
-                                    className={cn(
-                                      "flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-xl font-bold",
-                                      colorMeta[license.color] || colorMeta.blue,
-                                    )}
-                                  >
-                                    {license.name.charAt(0)}
-                                  </div>
-                                  <div>
-                                    <p className="font-bold text-slate-900 dark:text-white">
-                                      {license.name}
-                                    </p>
-                                    <p className="text-xs text-slate-500 dark:text-slate-400">
-                                      {license.vendor}
-                                    </p>
-                                  </div>
-                                </div>
-                              </td>
-                              <td className="px-6 py-5">
-                                <span className="rounded-lg bg-slate-100 px-2 py-1 text-[10px] font-bold uppercase tracking-tight text-slate-600 dark:bg-slate-800 dark:text-slate-400">
-                                  {license.type}
-                                </span>
-                              </td>
-                              <td className="px-6 py-5">
-                                <div className="mx-auto w-full max-w-[140px]">
-                                  <div className="mb-1 flex items-center justify-between text-[10px]">
-                                    <span className="font-bold">
-                                      {license.usedSeats} / {license.totalSeats}
-                                    </span>
-                                    <span
-                                      className={
-                                        license.usagePercent > 90
-                                          ? "font-bold text-rose-500"
-                                          : "text-slate-400"
-                                      }
-                                    >
-                                      {license.usagePercent}%
-                                    </span>
-                                  </div>
-                                  <div className="h-1.5 w-full overflow-hidden rounded-full bg-slate-100 dark:bg-slate-800">
-                                    <div
-                                      className={cn(
-                                        "h-full transition-all duration-700",
-                                        license.usagePercent > 95
-                                          ? "bg-rose-500"
-                                          : license.usagePercent > 80
-                                            ? "bg-amber-500"
-                                            : "bg-blue-500",
-                                      )}
-                                      style={{ width: `${license.usagePercent}%` }}
-                                    />
-                                  </div>
-                                </div>
-                              </td>
-                              <td className="px-6 py-5">
-                                <div className="flex items-center gap-2">
-                                  <span className={cn("h-2 w-2 rounded-full", meta.dot, "animate-pulse")} />
-                                  <span
-                                    className={cn(
-                                      "rounded-full border px-2 py-0.5 text-[10px] font-bold uppercase tracking-wide",
-                                      meta.badge,
-                                    )}
-                                  >
-                                    {meta.label}
-                                  </span>
-                                </div>
-                              </td>
-                              <td className="px-6 py-5 font-bold text-slate-900 dark:text-white">
-                                {license.annualCost}
-                              </td>
-                              <td
-                                className={cn(
-                                  "px-6 py-5 text-xs font-medium",
-                                  currentStatus === "ACTIVE"
-                                    ? "text-emerald-600"
-                                    : currentStatus === "WARNING"
-                                      ? "text-amber-600"
-                                      : currentStatus === "CRITICAL"
-                                        ? "text-rose-600"
-                                        : "text-slate-500",
-                                )}
-                              >
-                                {formatDate(license.expiryDate)}
-                              </td>
-                              <td className="px-6 py-5 text-right">
-                                <button
-                                  onClick={(e) => {
-                                    e.stopPropagation();
-                                    setEditingLicenseId(license.id);
-                                  }}
-                                  className="inline-flex items-center gap-2 rounded-lg border border-slate-200 bg-white px-3 py-2 text-xs font-semibold text-slate-700 transition-colors hover:bg-primary/20 cursor-pointer"
-                                >
-                                  <Edit className="h-3.5 w-3.5" />
-                                  Edit
-                                </button>
-                              </td>
-                            </tr>
-                          );
-                        })}
-                      </tbody>
-                    </table>
-                  </div>
-                </div>
-              </>
-            )}
-          </div>
-        </main>
+            <LicenseTable 
+              licenses={filteredLicenses}
+              onSelectLicense={setSelectedLicenseId}
+              onEditLicense={(id) => {
+                setSelectedLicenseId(null);
+                setEditingLicenseId(id);
+              }}
+              formatDate={formatDate}
+            />
+          </>
+        )}
       </div>
 
       <AnimatePresence>
@@ -773,6 +634,14 @@ export default function LicensesPage() {
               </div>
             </motion.div>
           </>
+        )}
+      </AnimatePresence>
+
+      <AnimatePresence>
+        {showForm && (
+          <LicenseForm
+            onClose={() => setShowForm(false)}
+          />
         )}
       </AnimatePresence>
 
@@ -999,6 +868,6 @@ export default function LicensesPage() {
           </>
         )}
       </AnimatePresence>
-    </div>
+    </DashboardShell >
   );
 }

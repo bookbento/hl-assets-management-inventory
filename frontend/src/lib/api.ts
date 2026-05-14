@@ -170,6 +170,14 @@ export const deleteAsset = async (id: string): Promise<void> => {
   }
 };
 
+export const assignAsset = async (payload: { employeeId: string; assetId: string }): Promise<any> => {
+  return submitPayload<any>(`${API_URL}/assets/assign`, payload, "POST");
+};
+
+export const unassignAsset = async (payload: { assetId: string }): Promise<any> => {
+  return submitPayload<any>(`${API_URL}/assets/unassign`, payload, "POST");
+};
+
 export const getAssetSummary = async (): Promise<any> => {
   const res = await authenticatedFetch(`${API_URL}/assets/summary`);
   if (!res.ok) {

@@ -12,7 +12,7 @@ import { Loader2, Pencil, Trash2, CheckCircle, Image as ImageIcon } from "lucide
 import { AssetStatus, AssetCategory } from "@/lib/mockups/types";
 import { cn } from "@/lib/mockups/utils";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { getAssets, deleteAsset, updateAsset } from "@/lib/api";
+import { getAssets, deleteAsset, updateAsset, getEmployees, assignAsset, unassignAsset } from "@/lib/api";
 import { resolveMediaUrl } from "@/lib/config";
 import { toast } from "react-hot-toast";
 import { AssetForm, AssetFormValues } from "./AssetForm";
@@ -30,6 +30,7 @@ type AssetRow = {
   purchaseDate?: string | Date | null;
   warrantyExpiry?: string | Date | null;
   user?: { name?: string | null } | null;
+  employeeAssets?: any[];
 };
 
 type AssetsResponse = {
@@ -71,6 +72,11 @@ function AssetTableContent() {
   const search = searchParams?.get("search") || "";
   const queryClient = useQueryClient();
 
+  const { data: employees = [] } = useQuery({
+    queryKey: ["employees"],
+    queryFn: getEmployees,
+  });
+
   const [page, setPage] = React.useState(1);
   const limit = 10;
 
@@ -100,6 +106,43 @@ function AssetTableContent() {
     }
   };
 
+  const assignMutation = useMutation({
+    mutationFn: assignAsset,
+    onSuccess: () => {
+      toast.success("Asset assigned successfully");
+      queryClient.invalidateQueries({ queryKey: ["assets"] });
+      queryClient.invalidateQueries({ queryKey: ["assets-summary"] });
+    },
+    onError: (err: any) => {
+      toast.error(err.message || "Failed to assign asset");
+    },
+  });
+
+  const unassignMutation = useMutation({
+    mutationFn: unassignAsset,
+    onSuccess: () => {
+      toast.success("Asset unassigned successfully");
+      queryClient.invalidateQueries({ queryKey: ["assets"] });
+      queryClient.invalidateQueries({ queryKey: ["assets-summary"] });
+    },
+    onError: (err: any) => {
+      toast.error(err.message || "Failed to unassign asset");
+    },
+  });
+
+  const handleAssignmentChange = async (assetId: string, currentEmployeeId: string | null, newEmployeeId: string) => {
+    try {
+      if (currentEmployeeId) {
+        await unassignMutation.mutateAsync({ assetId });
+      }
+      if (newEmployeeId) {
+        await assignMutation.mutateAsync({ employeeId: newEmployeeId, assetId });
+      }
+    } catch (e) {
+      // errors handled in mutations
+    }
+  };
+
   const updateMutation = useMutation({
     mutationFn: ({ id, data }: { id: string; data: Partial<AssetFormValues> }) =>
       updateAsset(id, data as any),
@@ -119,12 +162,13 @@ function AssetTableContent() {
   });
 
   const handleEdit = (asset: AssetRow) => {
+    const currentAssignment = asset.employeeAssets?.[0];
     const formattedData: Partial<AssetFormValues> & { imageUrl?: string | null } = {
       name: asset.name,
       serialNumber: asset.serialNumber,
       category: asset.category as AssetFormValues["category"],
       status: asset.status as AssetFormValues["status"],
-      assignedTo: asset.assignedTo ?? undefined,
+      assignedTo: currentAssignment?.employeeId || "",
       imageUrl: asset.imageUrl ?? undefined,
       // Ensure dates are in YYYY-MM-DD format for input type="date"
       purchaseDate: asset.purchaseDate ? new Date(asset.purchaseDate).toISOString().split('T')[0] : '',
@@ -195,9 +239,10 @@ function AssetTableContent() {
       accessorKey: "assignedTo",
       header: "Assigned To",
       cell: ({ row }) => {
-        // @ts-ignore
-        const userName = row.original.user?.name || row.original.assignedTo;
-        return <div className="text-sm text-[#424245]">{userName || "—"}</div>;
+        const currentAssignment = row.original.employeeAssets?.[0];
+        const userName = currentAssignment?.employee?.name || "—";
+
+        return <div className="text-sm text-[#424245]">{userName}</div>;
       },
     },
     {
@@ -239,7 +284,7 @@ function AssetTableContent() {
         </div>
       ),
     },
-  ], [deleteMutation.isPending]);
+  ], [deleteMutation.isPending, employees, assignMutation.isPending, unassignMutation.isPending]);
   const { data, isLoading, error } = useQuery<AssetsResponse>({
     queryKey: ["assets", { page, limit, search }],
     queryFn: async () => (await getAssets({ page, limit, search })) as unknown as AssetsResponse,
@@ -358,12 +403,19 @@ function AssetTableContent() {
         <AssetForm
           title="Edit Asset"
           initialData={formInitialData || undefined}
-          onSubmit={(data) => {
+          employees={employees}
+          onSubmit={async (data) => {
             const formattedData = {
               ...data,
               purchaseDate: data.purchaseDate ? new Date(data.purchaseDate).toISOString() : null,
               warrantyExpiry: data.warrantyExpiry ? new Date(data.warrantyExpiry).toISOString() : null,
             };
+
+            // Handle assignment change if any
+            if (data.assignedTo !== formInitialData?.assignedTo) {
+              await handleAssignmentChange(editingAsset.id, formInitialData?.assignedTo || null, data.assignedTo || "");
+            }
+
             updateMutation.mutate({ id: editingAsset.id, data: formattedData as any });
           }}
           onClose={() => {
