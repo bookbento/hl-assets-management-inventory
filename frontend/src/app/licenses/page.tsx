@@ -1,7 +1,7 @@
 "use client";
 
 import { DashboardShell } from "@/components/layout/DashboardShell";
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useState, useRef } from "react";
 import {
   AlertTriangle,
   Calendar,
@@ -132,6 +132,9 @@ export default function LicensesPage() {
   const [editingForm, setEditingForm] = useState<LicenseFormState | null>(null);
   const [selectedEmployeeId, setSelectedEmployeeId] = useState("");
   const [showForm, setShowForm] = useState(false);
+  const [searchUser, setSearchUser] = useState("");
+  const [isDropdownOpen, setIsDropdownOpen] = useState(false);
+  const dropdownRef = useRef<HTMLDivElement>(null);
 
   const { data: licenses = [], isLoading, error } = useQuery({
     queryKey: ["licenses"],
@@ -173,20 +176,20 @@ export default function LicensesPage() {
   }, [editingLicense]);
 
   useEffect(() => {
-    if (!assigningLicense) {
-      setSelectedEmployeeId("");
-      return;
-    }
+    setSelectedEmployeeId("");
+    setSearchUser("");
+    setIsDropdownOpen(false);
+  }, [assigningLicense]);
 
-    const eligibleEmployee = employees.find(
-      (employee) =>
-        !assigningLicense.assignments.some(
-          (assignment) => assignment.employee.id === employee.id,
-        ),
-    );
-
-    setSelectedEmployeeId(eligibleEmployee?.id || "");
-  }, [assigningLicense, employees]);
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node)) {
+        setIsDropdownOpen(false);
+      }
+    };
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, []);
 
   const updateMutation = useMutation({
     mutationFn: ({ id, payload }: { id: string; payload: Record<string, any> }) =>
@@ -504,7 +507,7 @@ export default function LicensesPage() {
                         const expiry = new Date(selectedLicense.expiryDate);
                         const calcStatus = expiry < now ? "EXPIRED" :
                           selectedLicense.usedSeats >= selectedLicense.totalSeats ? "CRITICAL" :
-                            selectedLicense.usagePercent >= 90 ? "WARNING" : "ACTIVE";
+                            selectedLicense.usagePercent >= 50 ? "WARNING" : "ACTIVE";
                         const dMeta = statusMeta[calcStatus];
 
                         return (
@@ -732,31 +735,6 @@ export default function LicensesPage() {
                     </label>
                   );
                 })}
-
-                <label className="space-y-2 text-left">
-                  <span className="text-xs font-bold uppercase tracking-wider text-slate-500">
-                    Status
-                  </span>
-                  <select
-                    value={editingForm.status}
-                    onChange={(e) =>
-                      setEditingForm((prev) =>
-                        prev
-                          ? {
-                            ...prev,
-                            status: e.target.value as LicenseRecord["status"],
-                          }
-                          : prev,
-                      )
-                    }
-                    className="w-full rounded-xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm outline-none focus:border-blue-500 dark:border-slate-800 dark:bg-slate-900"
-                  >
-                    <option value="ACTIVE">Active</option>
-                    <option value="WARNING">Warning</option>
-                    <option value="CRITICAL">Critical</option>
-                    <option value="EXPIRED">Expired</option>
-                  </select>
-                </label>
               </div>
 
               <div className="mt-6 flex items-center justify-end gap-3">
@@ -818,23 +796,57 @@ export default function LicensesPage() {
               </div>
 
               <div className="space-y-3">
-                <label className="space-y-2 text-left">
-                  <span className="text-xs font-bold uppercase tracking-wider text-slate-500">
-                    Employee
-                  </span>
-                  <select
-                    value={selectedEmployeeId}
-                    onChange={(e) => setSelectedEmployeeId(e.target.value)}
-                    className="w-full rounded-xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm outline-none focus:border-blue-500 dark:border-slate-800 dark:bg-slate-900"
-                  >
-                    <option value="">Select employee</option>
-                    {assignableEmployees.map((employee) => (
-                      <option key={employee.id} value={employee.id}>
-                        {employee.name} - {employee.email}
-                      </option>
-                    ))}
-                  </select>
-                </label>
+                <div ref={dropdownRef} className="relative">
+                  <label className="space-y-2 text-left">
+                    <span className="text-xs font-bold uppercase tracking-wider text-slate-500">
+                      Employee
+                    </span>
+                    <input
+                      type="text"
+                      value={searchUser}
+                      onChange={(e) => {
+                        setSearchUser(e.target.value);
+                        setIsDropdownOpen(true);
+                      }}
+                      onFocus={() => setIsDropdownOpen(true)}
+                      placeholder="Search and select employee..."
+                      className="w-full rounded-xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm outline-none focus:border-blue-500 dark:border-slate-800 dark:bg-slate-900"
+                    />
+                  </label>
+                  {isDropdownOpen && (
+                    <div className="absolute z-10 w-full mt-1 bg-white border border-slate-200 rounded-xl shadow-xl max-h-48 overflow-y-auto dark:bg-slate-950 dark:border-slate-800">
+                      <div
+                        className="px-4 py-2 hover:bg-slate-100 cursor-pointer text-sm dark:hover:bg-slate-900"
+                        onClick={() => {
+                          setSelectedEmployeeId("");
+                          setSearchUser("");
+                          setIsDropdownOpen(false);
+                        }}
+                      >
+                        Select employee
+                      </div>
+                      {assignableEmployees
+                        .filter(emp =>
+                          !searchUser ||
+                          emp.name.toLowerCase().includes(searchUser.toLowerCase()) ||
+                          emp.email.toLowerCase().includes(searchUser.toLowerCase())
+                        )
+                        .map((employee) => (
+                          <div
+                            key={employee.id}
+                            className="px-4 py-2 hover:bg-slate-100 cursor-pointer text-sm dark:hover:bg-slate-900"
+                            onClick={() => {
+                              setSelectedEmployeeId(employee.id);
+                              setSearchUser(`${employee.name} - ${employee.email}`);
+                              setIsDropdownOpen(false);
+                            }}
+                          >
+                            {employee.name} - {employee.email}
+                          </div>
+                        ))}
+                    </div>
+                  )}
+                </div>
               </div>
 
               <div className="mt-6 flex items-center justify-end gap-3">

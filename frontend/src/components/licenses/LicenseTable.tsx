@@ -57,7 +57,7 @@ export function LicenseTable({ licenses, onSelectLicense, onEditLicense, formatD
                 const expiry = new Date(license.expiryDate);
                 if (expiry < now) return "EXPIRED";
                 if (license.usedSeats >= license.totalSeats) return "CRITICAL";
-                if (license.usagePercent >= 90) return "WARNING";
+                if (license.usagePercent >= 50) return "WARNING";
                 return "ACTIVE";
               };
 
@@ -105,7 +105,9 @@ export function LicenseTable({ licenses, onSelectLicense, onEditLicense, formatD
                           className={
                             license.usagePercent > 90
                               ? "font-bold text-rose-500"
-                              : "text-slate-400"
+                              : license.usagePercent > 50
+                                ? "font-bold text-amber-500"
+                                : "text-slate-400"
                           }
                         >
                           {license.usagePercent}%
@@ -117,7 +119,7 @@ export function LicenseTable({ licenses, onSelectLicense, onEditLicense, formatD
                             "h-full transition-all duration-700",
                             license.usagePercent > 95
                               ? "bg-rose-500"
-                              : license.usagePercent > 80
+                              : license.usagePercent > 50
                                 ? "bg-amber-500"
                                 : "bg-blue-500",
                           )}
@@ -181,7 +183,7 @@ export function LicenseTable({ licenses, onSelectLicense, onEditLicense, formatD
           </tbody>
         </table>
       </div>
-      
+
       {totalPages > 1 && (
         <div className="px-5 py-4 border-t border-[#D2D2D7] bg-gray-50 flex items-center justify-between">
           <div className="text-[11px] font-medium text-[#86868B]">
