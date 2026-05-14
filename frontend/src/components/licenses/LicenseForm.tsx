@@ -48,8 +48,11 @@ export function LicenseForm({ onClose, onSubmit }: LicenseFormProps) {
     createMutation.mutate({
       ...formData,
       totalSeats: parseInt(formData.totalSeats, 10),
-      price: parseFloat(formData.price) || 0,
-      annualCost: parseFloat(formData.annualCost) || 0,
+      // Ensure ISO format for Prisma
+      expiryDate: formData.expiryDate ? new Date(formData.expiryDate).toISOString() : "",
+      // Ensure currency format if required by DB
+      price: formData.price.startsWith('$') ? formData.price : `$${formData.price}`,
+      annualCost: formData.annualCost.startsWith('$') ? formData.annualCost : `$${formData.annualCost}`,
     });
   };
 

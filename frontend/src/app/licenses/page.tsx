@@ -8,7 +8,6 @@ import {
   Check,
   DollarSign,
   FileUp,
-  Edit,
   Key,
   Loader2,
   Plus,
@@ -297,9 +296,9 @@ export default function LicensesPage() {
         totalSeats: Number(editingForm.totalSeats),
         status: editingForm.status,
         expiryDate: new Date(editingForm.expiryDate).toISOString(),
-        price: editingForm.price,
+        price: editingForm.price.startsWith('$') ? editingForm.price : `$${editingForm.price}`,
         billingCycle: editingForm.billingCycle,
-        annualCost: editingForm.annualCost,
+        annualCost: editingForm.annualCost.startsWith('$') ? editingForm.annualCost : `$${editingForm.annualCost}`,
         color: editingForm.color,
       },
     });
@@ -405,7 +404,7 @@ export default function LicensesPage() {
               </div>
             </div>
 
-            <LicenseTable 
+            <LicenseTable
               licenses={filteredLicenses}
               onSelectLicense={setSelectedLicenseId}
               onEditLicense={(id) => {
