@@ -15,6 +15,20 @@ const parseMoney = (value: string | number | null | undefined) => {
   return Number(String(value || '').replace(/[^0-9.-]/g, '')) || 0;
 };
 
+const startOfDay = (value = new Date()) => {
+  const date = new Date(value);
+  date.setHours(0, 0, 0, 0);
+  return date;
+};
+
+const daysUntil = (expiryDate: Date, referenceDate = new Date()) => {
+  const start = startOfDay(referenceDate);
+  const end = startOfDay(expiryDate);
+
+  const diffMs = end.getTime() - start.getTime();
+  return Math.ceil(diffMs / (1000 * 60 * 60 * 24));
+};
+
 @Injectable()
 export class LicenseService {
   constructor(private prisma: PrismaService) {}
@@ -76,8 +90,8 @@ export class LicenseService {
       },
     });
 
-    const now = new Date();
-    const inThirtyDays = new Date();
+    const now = startOfDay();
+    const inThirtyDays = startOfDay();
     inThirtyDays.setDate(now.getDate() + 30);
 
     const total = licenses.length;
@@ -101,6 +115,44 @@ export class LicenseService {
       availableSeats,
       annualCostTotal,
     };
+  }
+
+  async getExpiringSoon(days = 30) {
+    const now = startOfDay();
+    const until = startOfDay();
+    until.setDate(now.getDate() + days);
+
+    const licenses = await this.prisma.license.findMany({
+      where: {
+        expiryDate: {
+          gte: now,
+          lte: until,
+        },
+      },
+      orderBy: {
+        expiryDate: 'asc',
+      },
+    });
+
+    return licenses.map((license) => {
+      const daysLeft = daysUntil(license.expiryDate, now);
+
+      return {
+        id: license.id,
+        name: license.name,
+        vendor: license.vendor,
+        type: license.type,
+        status: license.status,
+        expiryDate: license.expiryDate,
+        daysLeft,
+        urgency:
+          daysLeft <= 7
+            ? 'critical'
+            : daysLeft <= 14
+              ? 'warning'
+              : 'soon',
+      };
+    });
   }
 
   async findOne(id: string) {

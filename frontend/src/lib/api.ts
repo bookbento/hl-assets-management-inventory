@@ -52,6 +52,17 @@ export type LicenseSummary = {
   annualCostTotal: number;
 };
 
+export type LicenseExpiryAlert = {
+  id: string;
+  name: string;
+  vendor: string;
+  type: string;
+  status: LicenseRecord["status"];
+  expiryDate: string;
+  daysLeft: number;
+  urgency: "soon" | "warning" | "critical";
+};
+
 const authenticatedFetch = async (url: string, options: RequestInit = {}) => {
   const session: any = await getSession();
   const headers = new Headers(options.headers || {});
@@ -199,6 +210,14 @@ export const getLicenseSummary = async (): Promise<LicenseSummary> => {
   const res = await authenticatedFetch(`${API_URL}/licenses/summary`);
   if (!res.ok) {
     throw new Error("Failed to fetch license summary");
+  }
+  return res.json();
+};
+
+export const getExpiringSoonLicenses = async (): Promise<LicenseExpiryAlert[]> => {
+  const res = await authenticatedFetch(`${API_URL}/licenses/expiring-soon`);
+  if (!res.ok) {
+    throw new Error("Failed to fetch expiring licenses");
   }
   return res.json();
 };

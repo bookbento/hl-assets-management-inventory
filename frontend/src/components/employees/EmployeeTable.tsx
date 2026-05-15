@@ -20,6 +20,7 @@ export function EmployeeTable({ onEdit, employeesData, isLoadingData }: Employee
   const searchParams = useSearchParams();
   const localSearch = searchParams?.get("search") || "";
   const [page, setPage] = useState(1);
+  const [sortConfig, setSortConfig] = useState<{ key: string; direction: 'asc' | 'desc' } | null>(null);
   const limit = 10;
 
   const { data: fetchedEmployees, isLoading: isFetching, error } = useQuery({
@@ -70,8 +71,6 @@ export function EmployeeTable({ onEdit, employeesData, isLoadingData }: Employee
       emp.businessUnit?.name?.toLowerCase().includes(term)
     );
   }) || [];
-
-  const [sortConfig, setSortConfig] = useState<{ key: string; direction: 'asc' | 'desc' } | null>(null);
 
   const handleSort = (key: string) => {
     let direction: 'asc' | 'desc' = 'asc';

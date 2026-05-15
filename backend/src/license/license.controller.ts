@@ -23,6 +23,11 @@ export class LicenseController {
     return this.licenseService.getSummary();
   }
 
+  @Get('expiring-soon')
+  getExpiringSoon() {
+    return this.licenseService.getExpiringSoon();
+  }
+
   @Get()
   findAll() {
     return this.licenseService.findAll();
