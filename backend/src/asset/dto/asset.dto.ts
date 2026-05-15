@@ -11,6 +11,14 @@ export class CreateAssetDto {
   description?: string;
 
   @IsString()
+  @IsOptional()
+  imageUrl?: string;
+
+  @IsString()
+  @IsOptional()
+  removeImage?: string;
+
+  @IsString()
   @IsNotEmpty()
   serialNumber: string;
 
@@ -39,6 +47,14 @@ export class UpdateAssetDto {
   @IsString()
   @IsOptional()
   description?: string;
+
+  @IsString()
+  @IsOptional()
+  imageUrl?: string;
+
+  @IsString()
+  @IsOptional()
+  removeImage?: string;
 
   @IsString()
   @IsOptional()

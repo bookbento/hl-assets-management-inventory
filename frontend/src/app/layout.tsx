@@ -1,18 +1,18 @@
-// frontend/src/app/layout.tsx
-
 import "./../styles/globals.css";
 import type { Metadata } from "next";
 import { Inter } from "next/font/google";
-import { QueryProvider } from "@/lib/query-provider";
-import { AuthProvider } from "@/lib/auth-provider";
-import { Sidebar } from "@/components/layout/Sidebar";
-import { Toaster } from "react-hot-toast";
 
 const inter = Inter({ subsets: ["latin"] });
+import { QueryProvider } from "@/lib/query-provider";
+import { AuthProvider } from "@/lib/auth-provider";
+import { Toaster } from "react-hot-toast";
 
 export const metadata: Metadata = {
-  title: "IT Asset Management",
-  description: "Manage your IT assets efficiently",
+  title: "CoreDesk",
+  description: "IT Asset Management",
+  icons: {
+    icon: "/favicon.ico",
+  }
 };
 
 export default function RootLayout({
@@ -22,15 +22,10 @@ export default function RootLayout({
 }) {
   return (
     <html lang="en">
-      <body className={inter.className}>
+      <body className={inter.className} suppressHydrationWarning>
         <QueryProvider>
           <AuthProvider>
-            <div className="flex h-screen bg-gray-100">
-              <Sidebar />
-              <main className="flex-1 overflow-x-hidden overflow-y-auto">
-                <div className="container mx-auto px-6 py-8">{children}</div>
-              </main>
-            </div>
+            {children}
             <Toaster />
           </AuthProvider>
         </QueryProvider>

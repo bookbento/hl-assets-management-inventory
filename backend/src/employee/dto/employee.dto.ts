@@ -15,6 +15,14 @@ export class CreateEmployeeDto {
   phone?: string;
 
   @IsString()
+  @IsOptional()
+  avatarUrl?: string;
+
+  @IsString()
+  @IsOptional()
+  removeAvatar?: string;
+
+  @IsString()
   @IsNotEmpty()
   businessUnitId: string;
 
@@ -51,6 +59,14 @@ export class UpdateEmployeeDto {
   @IsString()
   @IsOptional()
   phone?: string;
+
+  @IsString()
+  @IsOptional()
+  avatarUrl?: string;
+
+  @IsString()
+  @IsOptional()
+  removeAvatar?: string;
 
   @IsString()
   @IsOptional()

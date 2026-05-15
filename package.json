@@ -2,8 +2,9 @@
   "name": "it-assets-inventory",
   "version": "0.1.0",
   "private": true,
+  "packageManager": "pnpm@10.33.3",
   "scripts": {
-    "dev": "pnpm run backend:dev & pnpm run frontend:dev",
+    "dev": "concurrently \"pnpm run backend:dev\" \"pnpm run frontend:dev\"",
     "build": "pnpm -r build",
     "start": "pnpm -r start",
     "lint": "pnpm -r lint",
@@ -11,7 +12,8 @@
     "frontend:dev": "pnpm --dir frontend dev"
   },
   "devDependencies": {
-    "typescript": "^5",
-    "@types/node": "^20"
+    "@types/node": "^20",
+    "concurrently": "^9.2.1",
+    "typescript": "^5"
   }
 }

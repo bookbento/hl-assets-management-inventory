@@ -3,11 +3,12 @@
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
-import { AssetCategory, AssetStatus } from '@prisma/client';
-import { X, Upload, Info } from 'lucide-react';
+import { AssetCategory, AssetStatus } from '@/lib/mockups/types';
+import { X, Upload, Info, Image as ImageIcon, Trash2, Briefcase } from 'lucide-react';
 import { motion } from 'framer-motion';
 import { cn } from '@/lib/utils';
-import { useEffect } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
+import { resolveMediaUrl } from '@/lib/config';
 
 const assetSchema = z.object({
     name: z.string().min(2, 'Name is too short'),
@@ -19,27 +20,60 @@ const assetSchema = z.object({
     warrantyExpiry: z.string().min(1, 'Warranty expiry is required'),
 });
 
+const categoryLabels = {
+    [AssetCategory.LAPTOP]: 'Laptop',
+    [AssetCategory.MONITOR]: 'Monitor',
+    [AssetCategory.PERIPHERAL]: 'Peripheral',
+    [AssetCategory.NETWORKING]: 'Networking',
+    [AssetCategory.MOBILE]: 'Mobile',
+    [AssetCategory.OTHER]: 'Other',
+};
+
+const statusLabels = {
+    [AssetStatus.AVAILABLE]: 'Available',
+    [AssetStatus.IN_USE]: 'In Use',
+    [AssetStatus.MAINTENANCE]: 'Maintenance',
+    [AssetStatus.RETIRED]: 'Retired',
+};
+
 export type AssetFormValues = z.infer<typeof assetSchema>;
+export type AssetFormSubmitValues = AssetFormValues & {
+    imageFile?: File | null;
+    imageUrl?: string | null;
+    removeImage?: string;
+};
 
 interface AssetFormProps {
     onClose: () => void;
-    onSubmit: (data: AssetFormValues) => void;
-    initialData?: Partial<AssetFormValues>;
+    onSubmit: (data: AssetFormSubmitValues) => void;
+    initialData?: Partial<AssetFormValues> & { imageUrl?: string | null };
     title?: string;
     isModal?: boolean;
+    employees?: any[];
 }
 
-export function AssetForm({ 
-    onClose, 
-    onSubmit, 
-    initialData, 
+export function AssetForm({
+    onClose,
+    onSubmit,
+    initialData,
     title = "Add New Asset",
-    isModal = true 
+    isModal = true,
+    employees = []
 }: AssetFormProps) {
+    const fileInputRef = useRef<HTMLInputElement>(null);
+    const [selectedFile, setSelectedFile] = useState<File | null>(null);
+    const [previewUrl, setPreviewUrl] = useState<string | null>(
+        initialData?.imageUrl ? resolveMediaUrl(initialData.imageUrl) : null
+    );
+    const [removeExistingImage, setRemoveExistingImage] = useState(false);
+    const [dragActive, setDragActive] = useState(false);
+
     const {
         register,
         handleSubmit,
         reset,
+        watch,
+        setValue,
         formState: { errors, isSubmitting },
     } = useForm<AssetFormValues>({
         resolver: zodResolver(assetSchema),
@@ -49,48 +83,182 @@ export function AssetForm({
         },
     });
 
-    // Update form when initialData changes
     useEffect(() => {
         if (initialData) {
             reset(initialData);
+            setPreviewUrl(initialData.imageUrl ? resolveMediaUrl(initialData.imageUrl) : null);
+            setSelectedFile(null);
+            setRemoveExistingImage(false);
         }
     }, [initialData, reset]);
 
+    const [searchUser, setSearchUser] = useState('');
+    const [isDropdownOpen, setIsDropdownOpen] = useState(false);
+    const dropdownRef = useRef<HTMLDivElement>(null);
+
+    const assignedToValue = watch('assignedTo');
+    const selectedEmployee = useMemo(() =>
+        employees?.find(e => e.id === assignedToValue)
+        , [employees, assignedToValue]);
+
+    useEffect(() => {
+        if (selectedEmployee) {
+            setSearchUser(selectedEmployee.name);
+        } else {
+            setSearchUser('');
+        }
+    }, [selectedEmployee]);
+
+    const filteredEmployees = useMemo(() =>
+        employees?.filter(e =>
+            e.name.toLowerCase().includes(searchUser.toLowerCase()) ||
+            e.department?.name?.toLowerCase().includes(searchUser.toLowerCase())
+        ) || []
+        , [employees, searchUser]);
+
+    useEffect(() => {
+        const handleClickOutside = (event: MouseEvent) => {
+            if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node)) {
+                setIsDropdownOpen(false);
+                if (selectedEmployee) {
+                    setSearchUser(selectedEmployee.name);
+                } else {
+                    setSearchUser('');
+                }
+            }
+        };
+        document.addEventListener("mousedown", handleClickOutside);
+        return () => document.removeEventListener("mousedown", handleClickOutside);
+    }, [selectedEmployee]);
+
+    useEffect(() => {
+        if (!selectedFile) return;
+        const objectUrl = URL.createObjectURL(selectedFile);
+        setPreviewUrl(objectUrl);
+        return () => URL.revokeObjectURL(objectUrl);
+    }, [selectedFile]);
+
+    const handleFileSelect = (file?: File) => {
+        if (!file || !file.type.startsWith('image/')) return;
+        setRemoveExistingImage(false);
+        setSelectedFile(file);
+    };
+
+    const clearFile = () => {
+        setSelectedFile(null);
+        setPreviewUrl(null);
+        setRemoveExistingImage(Boolean(initialData?.imageUrl));
+        if (fileInputRef.current) {
+            fileInputRef.current.value = '';
+        }
+    };
+
+    const imageBox = useMemo(() => {
+        if (previewUrl) {
+            return (
+                <div className="relative w-full h-full min-h-[220px] overflow-hidden rounded-xl border border-[var(--border)] bg-[var(--surface-soft)]">
+                    <img
+                        src={previewUrl}
+                        alt="Asset preview"
+                        className="h-full w-full object-cover"
+                    />
+                    <div className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/60 to-transparent p-4 text-white">
+                        <div className="flex items-center justify-between gap-3">
+                            <div className="flex items-center gap-2 text-xs font-semibold">
+                                <ImageIcon className="w-4 h-4" />
+                                <span>{selectedFile ? selectedFile.name : 'Current image'}</span>
+                            </div>
+                            <button
+                                type="button"
+                                onClick={(e) => {
+                                    e.stopPropagation();
+                                    clearFile();
+                                }}
+                                className="rounded-full bg-black/30 p-2 hover:bg-black/45"
+                            >
+                                <Trash2 className="w-4 h-4" />
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            );
+        }
+
+        return (
+            <div className={cn(
+                "border-2 border-dashed border-[var(--border)] rounded-xl p-8 flex flex-col items-center justify-center transition-colors cursor-pointer group bg-[var(--surface-soft)]",
+                dragActive && "border-primary bg-primary/5"
+            )}>
+                <div className="w-12 h-12 rounded-full bg-[var(--surface)] shadow-sm flex items-center justify-center mb-3 group-hover:scale-110 transition-transform">
+                    <Upload className="w-5 h-5 text-primary" />
+                </div>
+                <p className="text-sm font-semibold mb-1">Click to upload or drag and drop</p>
+                <p className="text-xs text-[var(--muted-foreground)] font-medium">PNG, JPG or WebP (max. 2MB)</p>
+            </div>
+        );
+    }, [clearFile, dragActive, previewUrl, selectedFile]);
+
     const formContent = (
         <div className={cn(
-            "relative w-full bg-white overflow-hidden",
-            isModal ? "max-w-2xl rounded-apple-lg shadow-2xl" : "rounded-xl"
+            "relative w-full bg-[var(--surface)] text-[var(--foreground)] overflow-hidden",
+            isModal ? "max-w-2xl rounded-apple-lg shadow-2xl border border-[var(--border)]" : "rounded-xl"
         )}>
             {isModal && (
-                <div className="px-6 py-4 border-b border-gray-100 flex items-center justify-between bg-gray-50/50">
+                <div className="px-6 py-4 border-b border-[var(--border)] flex items-center justify-between bg-[var(--surface-soft)]">
                     <h3 className="text-lg font-bold">{title}</h3>
-                    <button onClick={onClose} className="p-2 hover:bg-gray-200 rounded-full transition-colors">
-                        <X className="w-5 h-5 text-gray-500" />
+                    <button onClick={onClose} className="p-2 hover:bg-[var(--surface-muted)] rounded-full transition-colors">
+                        <X className="w-5 h-5 text-[var(--muted-foreground)]" />
                     </button>
                 </div>
             )}
 
-            <form onSubmit={handleSubmit(onSubmit)} className="p-6">
+            <form
+                onSubmit={handleSubmit((values) =>
+                    onSubmit({
+                        ...values,
+                        imageFile: selectedFile,
+                        removeImage: removeExistingImage ? 'true' : undefined,
+                    })
+                )}
+                className="p-6"
+            >
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                     <div className="md:col-span-2">
-                        <label className="block text-[10px] font-bold uppercase tracking-wider text-gray-400 mb-2">Asset Image</label>
-                        <div className="border-2 border-dashed border-gray-200 rounded-xl p-8 flex flex-col items-center justify-center hover:border-primary/50 transition-colors cursor-pointer group bg-gray-50/50">
-                            <div className="w-12 h-12 rounded-full bg-white shadow-sm flex items-center justify-center mb-3 group-hover:scale-110 transition-transform">
-                                <Upload className="w-5 h-5 text-primary" />
-                            </div>
-                            <p className="text-sm font-semibold mb-1">Click to upload or drag and drop</p>
-                            <p className="text-xs text-gray-400 font-medium">PNG, JPG or WebP (max. 2MB)</p>
+                        <label className="block text-[10px] font-bold uppercase tracking-wider text-[var(--muted-foreground)] mb-2">Asset Image</label>
+                        <input
+                            ref={fileInputRef}
+                            type="file"
+                            accept="image/*"
+                            className="hidden"
+                            onChange={(e) => handleFileSelect(e.target.files?.[0])}
+                        />
+                        <div
+                            role="button"
+                            tabIndex={0}
+                            onClick={() => fileInputRef.current?.click()}
+                            onDragOver={(e) => {
+                                e.preventDefault();
+                                setDragActive(true);
+                            }}
+                            onDragLeave={() => setDragActive(false)}
+                            onDrop={(e) => {
+                                e.preventDefault();
+                                setDragActive(false);
+                                handleFileSelect(e.dataTransfer.files?.[0]);
+                            }}
+                        >
+                            {imageBox}
                         </div>
                     </div>
 
                     <div className="space-y-4">
                         <div>
-                            <label className="block text-[10px] font-bold uppercase tracking-wider text-gray-400 mb-1.5">Asset Name</label>
+                            <label className="block text-[10px] font-bold uppercase tracking-wider text-[var(--muted-foreground)] mb-1.5">Asset Name</label>
                             <input
                                 {...register('name')}
                                 placeholder="e.g. MacBook Pro M3"
                                 className={cn(
-                                    "w-full bg-gray-50 border border-gray-200 rounded-lg px-4 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all",
+                                    "w-full bg-[var(--surface-soft)] border border-[var(--border)] rounded-lg px-4 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all",
                                     errors.name && "border-red-500 focus:ring-red-200 focus:border-red-500"
                                 )}
                             />
@@ -98,25 +266,25 @@ export function AssetForm({
                         </div>
 
                         <div>
-                            <label className="block text-[10px] font-bold uppercase tracking-wider text-gray-400 mb-1.5">Category</label>
+                            <label className="block text-[10px] font-bold uppercase tracking-wider text-[var(--muted-foreground)] mb-1.5">Category</label>
                             <select
                                 {...register('category')}
-                                className="w-full bg-gray-50 border border-gray-200 rounded-lg px-4 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all appearance-none"
+                                className="w-full bg-[var(--surface-soft)] border border-[var(--border)] rounded-lg px-4 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all appearance-none"
                             >
                                 {Object.values(AssetCategory).map((cat) => (
-                                    <option key={cat} value={cat}>{cat}</option>
+                                    <option key={cat} value={cat}>{categoryLabels[cat]}</option>
                                 ))}
                             </select>
                         </div>
 
                         <div>
-                            <label className="block text-[10px] font-bold uppercase tracking-wider text-gray-400 mb-1.5">Status</label>
+                            <label className="block text-[10px] font-bold uppercase tracking-wider text-[var(--muted-foreground)] mb-1.5">Status</label>
                             <select
                                 {...register('status')}
-                                className="w-full bg-gray-50 border border-gray-200 rounded-lg px-4 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all appearance-none"
+                                className="w-full bg-[var(--surface-soft)] border border-[var(--border)] rounded-lg px-4 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all appearance-none"
                             >
                                 {Object.values(AssetStatus).map((status) => (
-                                    <option key={status} value={status}>{status}</option>
+                                    <option key={status} value={status}>{statusLabels[status]}</option>
                                 ))}
                             </select>
                         </div>
@@ -124,38 +292,79 @@ export function AssetForm({
 
                     <div className="space-y-4 text-left">
                         <div>
-                            <label className="block text-[10px] font-bold uppercase tracking-wider text-gray-400 mb-1.5">Serial Number</label>
+                            <label className="block text-[10px] font-bold uppercase tracking-wider text-[var(--muted-foreground)] mb-1.5">Serial Number</label>
                             <input
                                 {...register('serialNumber')}
                                 placeholder="e.g. SER-123456"
-                                className="w-full bg-gray-50 border border-gray-200 rounded-lg px-4 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all"
+                                className="w-full bg-[var(--surface-soft)] border border-[var(--border)] rounded-lg px-4 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all"
                             />
                         </div>
 
-                        <div>
-                            <label className="block text-[10px] font-bold uppercase tracking-wider text-gray-400 mb-1.5">Assigned To</label>
+                        <div ref={dropdownRef} className="relative">
+                            <label className="block text-[10px] font-bold uppercase tracking-wider text-[var(--muted-foreground)] mb-1.5">Assigned To</label>
                             <input
-                                {...register('assignedTo')}
-                                placeholder="User Name"
-                                className="w-full bg-gray-50 border border-gray-200 rounded-lg px-4 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all"
+                                type="text"
+                                value={searchUser}
+                                onChange={(e) => {
+                                    setSearchUser(e.target.value);
+                                    setIsDropdownOpen(true);
+                                }}
+                                onFocus={() => setIsDropdownOpen(true)}
+                                placeholder="Search and select user..."
+                                className="w-full bg-[var(--surface-soft)] border border-[var(--border)] rounded-lg px-4 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all"
                             />
+                            {isDropdownOpen && (
+                                <div className="absolute z-10 w-full mt-1 bg-white border border-[var(--border)] rounded-lg shadow-lg max-h-48 overflow-y-auto">
+                                    <div
+                                        className="px-4 py-2 hover:bg-gray-100 cursor-pointer text-sm text-[var(--foreground)]"
+                                        onClick={() => {
+                                            setValue('assignedTo', '', { shouldDirty: true });
+                                            setSearchUser('');
+                                            setIsDropdownOpen(false);
+                                        }}
+                                    >
+                                        Unassigned
+                                    </div>
+                                    {filteredEmployees.map((emp: any) => (
+                                        <div
+                                            key={emp.id}
+                                            className="px-4 py-2 hover:bg-gray-100 cursor-pointer text-sm text-[var(--foreground)] flex justify-between items-center"
+                                            onClick={() => {
+                                                setValue('assignedTo', emp.id, { shouldDirty: true });
+                                                setSearchUser(emp.name);
+                                                setIsDropdownOpen(false);
+                                            }}
+                                        >
+                                            <span>{emp.name}</span>
+                                            {emp.department?.name && (
+                                                <div className="flex items-center bg-gray-100 px-2 py-1 rounded-lg ">
+                                                    <Briefcase className="w-3.5 h-3.5 text-[#86868B]" />
+                                                    <span className="text-[8px] px-1.5 py-0.5 rounded text-gray-500 uppercase font-bold">
+                                                        {emp.department.name}
+                                                    </span>
+                                                </div>
+                                            )}
+                                        </div>
+                                    ))}
+                                </div>
+                            )}
                         </div>
 
                         <div className="grid grid-cols-2 gap-4">
                             <div>
-                                <label className="block text-[10px] font-bold uppercase tracking-wider text-gray-400 mb-1.5">Purchase Date</label>
+                                <label className="block text-[10px] font-bold uppercase tracking-wider text-[var(--muted-foreground)] mb-1.5">Purchase Date</label>
                                 <input
                                     type="date"
                                     {...register('purchaseDate')}
-                                    className="w-full bg-gray-50 border border-gray-200 rounded-lg px-4 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all"
+                                    className="w-full bg-[var(--surface-soft)] border border-[var(--border)] rounded-lg px-4 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all"
                                 />
                             </div>
                             <div>
-                                <label className="block text-[10px] font-bold uppercase tracking-wider text-gray-400 mb-1.5">Warranty Expiry</label>
+                                <label className="block text-[10px] font-bold uppercase tracking-wider text-[var(--muted-foreground)] mb-1.5">Warranty Expiry</label>
                                 <input
                                     type="date"
                                     {...register('warrantyExpiry')}
-                                    className="w-full bg-gray-50 border border-gray-200 rounded-lg px-4 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all"
+                                    className="w-full bg-[var(--surface-soft)] border border-[var(--border)] rounded-lg px-4 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all"
                                 />
                             </div>
                         </div>
@@ -173,7 +382,7 @@ export function AssetForm({
                         <button
                             type="button"
                             onClick={onClose}
-                            className="px-4 py-2 text-sm font-medium text-gray-600 hover:bg-gray-100 rounded-lg transition-colors"
+                            className="px-4 py-2 text-sm font-medium text-[var(--foreground)] hover:bg-[var(--surface-muted)] rounded-lg transition-colors"
                         >
                             Cancel
                         </button>
