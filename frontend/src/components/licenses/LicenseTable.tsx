@@ -2,7 +2,7 @@
 
 import React, { useState } from "react";
 import { cn } from "@/lib/utils";
-import { ShieldCheck, AlertTriangle, Edit, ChevronLeft, ChevronRight } from "lucide-react";
+import { ShieldCheck, AlertTriangle, Edit, ChevronLeft, ChevronRight, ChevronUp, ChevronDown, ArrowUpDown } from "lucide-react";
 import { LicenseRecord } from "@/lib/api";
 
 interface LicenseTableProps {
@@ -29,11 +29,65 @@ const colorMeta: Record<string, string> = {
 
 export function LicenseTable({ licenses, onSelectLicense, onEditLicense, formatDate }: LicenseTableProps) {
   const [page, setPage] = useState(1);
+  const [sortConfig, setSortConfig] = useState<{ key: string; direction: 'asc' | 'desc' } | null>(null);
   const limit = 10;
 
-  const totalPages = Math.ceil(licenses.length / limit);
+  const handleSort = (key: string) => {
+    let direction: 'asc' | 'desc' = 'asc';
+    if (sortConfig && sortConfig.key === key && sortConfig.direction === 'asc') {
+      direction = 'desc';
+    } else if (sortConfig && sortConfig.key === key && sortConfig.direction === 'desc') {
+      setSortConfig(null);
+      return;
+    }
+    setSortConfig({ key, direction });
+  };
+
+  const sortedLicenses = React.useMemo(() => {
+    let sortableItems = [...licenses];
+    if (sortConfig !== null) {
+      sortableItems.sort((a, b) => {
+        let aValue: any = a[sortConfig.key as keyof LicenseRecord];
+        let bValue: any = b[sortConfig.key as keyof LicenseRecord];
+
+        if (sortConfig.key === 'status') {
+           const getStatus = (l: LicenseRecord) => {
+             const now = new Date();
+             const expiry = new Date(l.expiryDate);
+             if (expiry < now) return 0;
+             if (l.usedSeats >= l.totalSeats) return 1;
+             if (l.usagePercent >= 50) return 2;
+             return 3;
+           };
+           aValue = getStatus(a);
+           bValue = getStatus(b);
+        } else if (sortConfig.key === 'annualCost') {
+           aValue = parseFloat((aValue?.toString() || "0").replace(/[^0-9.-]+/g,"")) || 0;
+           bValue = parseFloat((bValue?.toString() || "0").replace(/[^0-9.-]+/g,"")) || 0;
+        }
+
+        if (aValue < bValue) {
+          return sortConfig.direction === 'asc' ? -1 : 1;
+        }
+        if (aValue > bValue) {
+          return sortConfig.direction === 'asc' ? 1 : -1;
+        }
+        return 0;
+      });
+    }
+    return sortableItems;
+  }, [licenses, sortConfig]);
+
+  const totalPages = Math.ceil(sortedLicenses.length / limit);
   const startIndex = (page - 1) * limit;
-  const paginatedLicenses = licenses.slice(startIndex, startIndex + limit);
+  const paginatedLicenses = sortedLicenses.slice(startIndex, startIndex + limit);
+
+  const SortIcon = ({ columnKey }: { columnKey: string }) => {
+    if (sortConfig?.key === columnKey) {
+      return sortConfig.direction === 'asc' ? <ChevronUp className="w-3.5 h-3.5" /> : <ChevronDown className="w-3.5 h-3.5" />;
+    }
+    return <ArrowUpDown className="w-3.5 h-3.5 opacity-30 group-hover:opacity-100 transition-opacity" />;
+  };
 
   return (
     <div className="rounded-2xl border border-slate-200 bg-white shadow-sm dark:border-slate-800 dark:bg-slate-950 flex flex-col">
@@ -41,12 +95,42 @@ export function LicenseTable({ licenses, onSelectLicense, onEditLicense, formatD
         <table className="w-full text-left text-sm">
           <thead className="bg-gray-50/50 text-xs font-bold border-b border-[#D2D2D7] uppercase tracking-tight text-[#86868B] dark:bg-slate-900/50">
             <tr>
-              <th className="px-6 py-4">Software & Vendor</th>
-              <th className="px-6 py-4">Type</th>
-              <th className="px-6 py-4 text-center">Seats Usage</th>
-              <th className="px-6 py-4">Status</th>
-              <th className="px-6 py-4">Annual Cost</th>
-              <th className="px-6 py-4">Expiry</th>
+              <th className="px-6 py-4 cursor-pointer group hover:bg-gray-100 dark:hover:bg-slate-800 transition-colors" onClick={() => handleSort('name')}>
+                <div className="flex items-center gap-1.5">
+                  Software & Vendor
+                  <SortIcon columnKey="name" />
+                </div>
+              </th>
+              <th className="px-6 py-4 cursor-pointer group hover:bg-gray-100 dark:hover:bg-slate-800 transition-colors" onClick={() => handleSort('type')}>
+                <div className="flex items-center gap-1.5">
+                  Type
+                  <SortIcon columnKey="type" />
+                </div>
+              </th>
+              <th className="px-6 py-4 text-center cursor-pointer group hover:bg-gray-100 dark:hover:bg-slate-800 transition-colors" onClick={() => handleSort('usagePercent')}>
+                <div className="flex items-center justify-center gap-1.5">
+                  Seats Usage
+                  <SortIcon columnKey="usagePercent" />
+                </div>
+              </th>
+              <th className="px-6 py-4 cursor-pointer group hover:bg-gray-100 dark:hover:bg-slate-800 transition-colors" onClick={() => handleSort('status')}>
+                <div className="flex items-center gap-1.5">
+                  Status
+                  <SortIcon columnKey="status" />
+                </div>
+              </th>
+              <th className="px-6 py-4 cursor-pointer group hover:bg-gray-100 dark:hover:bg-slate-800 transition-colors" onClick={() => handleSort('annualCost')}>
+                <div className="flex items-center gap-1.5">
+                  Annual Cost
+                  <SortIcon columnKey="annualCost" />
+                </div>
+              </th>
+              <th className="px-6 py-4 cursor-pointer group hover:bg-gray-100 dark:hover:bg-slate-800 transition-colors" onClick={() => handleSort('expiryDate')}>
+                <div className="flex items-center gap-1.5">
+                  Expiry
+                  <SortIcon columnKey="expiryDate" />
+                </div>
+              </th>
               <th className="px-6 py-4 text-right">Actions</th>
             </tr>
           </thead>
@@ -142,7 +226,11 @@ export function LicenseTable({ licenses, onSelectLicense, onEditLicense, formatD
                     </div>
                   </td>
                   <td className="px-6 py-5 font-bold text-slate-900 dark:text-white">
-                    {license.annualCost}
+                    {new Intl.NumberFormat("en-US", {
+                      style: "currency",
+                      currency: license.currency || "USD",
+                      maximumFractionDigits: 0,
+                    }).format(license.annualCost || 0)}
                   </td>
                   <td
                     className={cn(

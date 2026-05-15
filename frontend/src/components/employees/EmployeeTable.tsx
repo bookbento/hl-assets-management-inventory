@@ -3,7 +3,7 @@
 import React, { useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { getEmployees, deleteEmployee } from "@/lib/api";
-import { Building, Briefcase, Pencil, Trash2, Loader2, ChevronLeft, ChevronRight } from "lucide-react";
+import { Building, Briefcase, Pencil, Trash2, Loader2, ChevronLeft, ChevronRight, ChevronUp, ChevronDown, ArrowUpDown } from "lucide-react";
 import { motion } from "framer-motion";
 import { resolveMediaUrl } from "@/lib/config";
 import { toast } from "react-hot-toast";
@@ -71,9 +71,62 @@ export function EmployeeTable({ onEdit, employeesData, isLoadingData }: Employee
     );
   }) || [];
 
-  const totalPages = Math.ceil(filteredEmployees.length / limit);
+  const [sortConfig, setSortConfig] = useState<{ key: string; direction: 'asc' | 'desc' } | null>(null);
+
+  const handleSort = (key: string) => {
+    let direction: 'asc' | 'desc' = 'asc';
+    if (sortConfig && sortConfig.key === key && sortConfig.direction === 'asc') {
+      direction = 'desc';
+    } else if (sortConfig && sortConfig.key === key && sortConfig.direction === 'desc') {
+      setSortConfig(null);
+      return;
+    }
+    setSortConfig({ key, direction });
+  };
+
+  const sortedEmployees = React.useMemo(() => {
+    let sortableItems = [...filteredEmployees];
+    if (sortConfig !== null) {
+      sortableItems.sort((a, b) => {
+        let aValue: any;
+        let bValue: any;
+
+        if (sortConfig.key === 'name') {
+           aValue = a.name || '';
+           bValue = b.name || '';
+        } else if (sortConfig.key === 'department') {
+           aValue = a.department?.name || '';
+           bValue = b.department?.name || '';
+        } else if (sortConfig.key === 'jobTitle') {
+           aValue = a.jobTitle?.name || '';
+           bValue = b.jobTitle?.name || '';
+        } else if (sortConfig.key === 'assets') {
+           aValue = a._count?.employeeAssets || 0;
+           bValue = b._count?.employeeAssets || 0;
+        }
+
+        if (aValue < bValue) {
+          return sortConfig.direction === 'asc' ? -1 : 1;
+        }
+        if (aValue > bValue) {
+          return sortConfig.direction === 'asc' ? 1 : -1;
+        }
+        return 0;
+      });
+    }
+    return sortableItems;
+  }, [filteredEmployees, sortConfig]);
+
+  const totalPages = Math.ceil(sortedEmployees.length / limit);
   const startIndex = (page - 1) * limit;
-  const paginatedEmployees = filteredEmployees.slice(startIndex, startIndex + limit);
+  const paginatedEmployees = sortedEmployees.slice(startIndex, startIndex + limit);
+
+  const SortIcon = ({ columnKey }: { columnKey: string }) => {
+    if (sortConfig?.key === columnKey) {
+      return sortConfig.direction === 'asc' ? <ChevronUp className="w-3.5 h-3.5" /> : <ChevronDown className="w-3.5 h-3.5" />;
+    }
+    return <ArrowUpDown className="w-3.5 h-3.5 opacity-30 group-hover:opacity-100 transition-opacity" />;
+  };
 
   return (
     <div className="flex flex-col flex-1">
@@ -81,17 +134,29 @@ export function EmployeeTable({ onEdit, employeesData, isLoadingData }: Employee
         <table className="w-full text-sm text-left">
           <thead className="bg-gray-50/50 border-b border-[#D2D2D7]">
             <tr>
-              <th className="px-6 py-4 text-[11px] font-bold uppercase tracking-tight text-[#86868B]">
-                Name
+              <th className="px-6 py-4 text-[11px] font-bold uppercase tracking-tight text-[#86868B] cursor-pointer group hover:bg-gray-100 transition-colors" onClick={() => handleSort('name')}>
+                <div className="flex items-center gap-1.5">
+                  Name
+                  <SortIcon columnKey="name" />
+                </div>
               </th>
-              <th className="px-6 py-4 text-[11px] font-bold uppercase tracking-tight text-[#86868B]">
-                Unit / Department
+              <th className="px-6 py-4 text-[11px] font-bold uppercase tracking-tight text-[#86868B] cursor-pointer group hover:bg-gray-100 transition-colors" onClick={() => handleSort('department')}>
+                <div className="flex items-center gap-1.5">
+                  Unit / Department
+                  <SortIcon columnKey="department" />
+                </div>
               </th>
-              <th className="px-6 py-4 text-[11px] font-bold uppercase tracking-tight text-[#86868B]">
-                Job Title
+              <th className="px-6 py-4 text-[11px] font-bold uppercase tracking-tight text-[#86868B] cursor-pointer group hover:bg-gray-100 transition-colors" onClick={() => handleSort('jobTitle')}>
+                <div className="flex items-center gap-1.5">
+                  Job Title
+                  <SortIcon columnKey="jobTitle" />
+                </div>
               </th>
-              <th className="px-6 py-4 text-[11px] font-bold uppercase tracking-tight text-[#86868B]">
-                Assets
+              <th className="px-6 py-4 text-[11px] font-bold uppercase tracking-tight text-[#86868B] cursor-pointer group hover:bg-gray-100 transition-colors" onClick={() => handleSort('assets')}>
+                <div className="flex items-center gap-1.5">
+                  Assets
+                  <SortIcon columnKey="assets" />
+                </div>
               </th>
               <th className="px-6 py-4 text-right text-[11px] font-bold uppercase tracking-tight text-[#86868B]">
                 Actions

@@ -98,7 +98,11 @@ export default function LicenseDetailPage() {
                 <div className="text-right pl-15 pr-12">
                   <p className="text-[10px] text-slate-500 uppercase tracking-wider font-bold">Annual Cost</p>
                   <p className="text-xl font-bold text-slate-900 dark:text-white">
-                    {license.annualCost}
+                    {new Intl.NumberFormat("en-US", {
+                      style: "currency",
+                      currency: license.currency || "USD",
+                      maximumFractionDigits: 0,
+                    }).format(license.annualCost || 0)}
                   </p>
                 </div>
               </div>

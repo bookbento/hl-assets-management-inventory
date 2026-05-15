@@ -7,7 +7,13 @@ import {
   UpdateLicenseDto,
 } from './dto/license.dto';
 
-const parseMoney = (value: string) => Number(String(value || '').replace(/[^0-9.-]/g, '')) || 0;
+const parseMoney = (value: string | number | null | undefined) => {
+  if (typeof value === 'number') {
+    return value;
+  }
+
+  return Number(String(value || '').replace(/[^0-9.-]/g, '')) || 0;
+};
 
 @Injectable()
 export class LicenseService {

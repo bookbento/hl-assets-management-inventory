@@ -7,8 +7,9 @@ import {
   flexRender,
   getCoreRowModel,
   useReactTable,
+  SortingState,
 } from "@tanstack/react-table";
-import { Loader2, Pencil, Trash2, CheckCircle, Image as ImageIcon } from "lucide-react";
+import { Loader2, Pencil, Trash2, CheckCircle, Image as ImageIcon, ChevronUp, ChevronDown, ArrowUpDown } from "lucide-react";
 import { AssetStatus, AssetCategory } from "@/lib/mockups/types";
 import { cn } from "@/lib/mockups/utils";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
@@ -285,16 +286,26 @@ function AssetTableContent() {
       ),
     },
   ], [deleteMutation.isPending, employees, assignMutation.isPending, unassignMutation.isPending]);
+  const [sorting, setSorting] = React.useState<SortingState>([]);
+  
+  const sortBy = sorting.length > 0 ? sorting[0].id : undefined;
+  const sortOrder = sorting.length > 0 ? (sorting[0].desc ? 'desc' : 'asc') : undefined;
+
   const { data, isLoading, error } = useQuery<AssetsResponse>({
-    queryKey: ["assets", { page, limit, search }],
-    queryFn: async () => (await getAssets({ page, limit, search })) as unknown as AssetsResponse,
+    queryKey: ["assets", { page, limit, search, sortBy, sortOrder }],
+    queryFn: async () => (await getAssets({ page, limit, search, sortBy, sortOrder })) as unknown as AssetsResponse,
   });
 
   const table = useReactTable({
     data: data?.data || [],
     columns,
     getCoreRowModel: getCoreRowModel(),
+    onSortingChange: setSorting,
+    state: {
+      sorting,
+    },
     manualPagination: true,
+    manualSorting: true,
   });
 
   if (isLoading) {
@@ -326,17 +337,36 @@ function AssetTableContent() {
           <thead className="bg-gray-50/50 border-b border-[#D2D2D7]">
             {table.getHeaderGroups().map((headerGroup) => (
               <tr key={headerGroup.id}>
-                {headerGroup.headers.map((header) => (
-                  <th
-                    key={header.id}
-                    className="text-left px-5 py-3 text-[11px] font-bold uppercase tracking-tight text-[#86868B]"
-                  >
-                    {flexRender(
-                      header.column.columnDef.header,
-                      header.getContext(),
-                    )}
-                  </th>
-                ))}
+                {headerGroup.headers.map((header) => {
+                  const canSort = header.column.getCanSort() && header.id !== 'actions';
+                  return (
+                    <th
+                      key={header.id}
+                      className={cn(
+                        "text-left px-5 py-3 text-[11px] font-bold uppercase tracking-tight text-[#86868B]",
+                        canSort && "cursor-pointer group hover:bg-gray-100 transition-colors"
+                      )}
+                      onClick={canSort ? header.column.getToggleSortingHandler() : undefined}
+                    >
+                      <div className={cn("flex items-center gap-1.5", header.id === 'actions' && "justify-end")}>
+                        {flexRender(
+                          header.column.columnDef.header,
+                          header.getContext(),
+                        )}
+                        {canSort && (
+                          <span className="inline-flex">
+                            {{
+                              asc: <ChevronUp className="w-3.5 h-3.5" />,
+                              desc: <ChevronDown className="w-3.5 h-3.5" />,
+                            }[header.column.getIsSorted() as string] ?? (
+                              <ArrowUpDown className="w-3.5 h-3.5 opacity-30 group-hover:opacity-100 transition-opacity" />
+                            )}
+                          </span>
+                        )}
+                      </div>
+                    </th>
+                  );
+                })}
               </tr>
             ))}
           </thead>

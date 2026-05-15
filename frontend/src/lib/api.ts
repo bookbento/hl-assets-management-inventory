@@ -32,9 +32,10 @@ export type LicenseRecord = {
   totalSeats: number;
   status: "ACTIVE" | "WARNING" | "CRITICAL" | "EXPIRED";
   expiryDate: string;
-  price: string;
+  price: number;
+  currency: string;
   billingCycle: string;
-  annualCost: string;
+  annualCost: number;
   color: string;
   usedSeats: number;
   availableSeats: number;

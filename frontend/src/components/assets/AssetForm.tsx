@@ -4,7 +4,7 @@ import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
 import { AssetCategory, AssetStatus } from '@/lib/mockups/types';
-import { X, Upload, Info, Image as ImageIcon, Trash2 } from 'lucide-react';
+import { X, Upload, Info, Image as ImageIcon, Trash2, Briefcase } from 'lucide-react';
 import { motion } from 'framer-motion';
 import { cn } from '@/lib/utils';
 import { useEffect, useMemo, useRef, useState } from 'react';
@@ -97,9 +97,9 @@ export function AssetForm({
     const dropdownRef = useRef<HTMLDivElement>(null);
 
     const assignedToValue = watch('assignedTo');
-    const selectedEmployee = useMemo(() => 
+    const selectedEmployee = useMemo(() =>
         employees?.find(e => e.id === assignedToValue)
-    , [employees, assignedToValue]);
+        , [employees, assignedToValue]);
 
     useEffect(() => {
         if (selectedEmployee) {
@@ -109,9 +109,12 @@ export function AssetForm({
         }
     }, [selectedEmployee]);
 
-    const filteredEmployees = useMemo(() => 
-        employees?.filter(e => e.name.toLowerCase().includes(searchUser.toLowerCase())) || []
-    , [employees, searchUser]);
+    const filteredEmployees = useMemo(() =>
+        employees?.filter(e =>
+            e.name.toLowerCase().includes(searchUser.toLowerCase()) ||
+            e.department?.name?.toLowerCase().includes(searchUser.toLowerCase())
+        ) || []
+        , [employees, searchUser]);
 
     useEffect(() => {
         const handleClickOutside = (event: MouseEvent) => {
@@ -312,27 +315,35 @@ export function AssetForm({
                             />
                             {isDropdownOpen && (
                                 <div className="absolute z-10 w-full mt-1 bg-white border border-[var(--border)] rounded-lg shadow-lg max-h-48 overflow-y-auto">
-                                    <div 
-                                       className="px-4 py-2 hover:bg-gray-100 cursor-pointer text-sm text-[var(--foreground)]"
-                                       onClick={() => {
-                                           setValue('assignedTo', '', { shouldDirty: true });
-                                           setSearchUser('');
-                                           setIsDropdownOpen(false);
-                                       }}
+                                    <div
+                                        className="px-4 py-2 hover:bg-gray-100 cursor-pointer text-sm text-[var(--foreground)]"
+                                        onClick={() => {
+                                            setValue('assignedTo', '', { shouldDirty: true });
+                                            setSearchUser('');
+                                            setIsDropdownOpen(false);
+                                        }}
                                     >
-                                       Unassigned
+                                        Unassigned
                                     </div>
                                     {filteredEmployees.map((emp: any) => (
-                                        <div 
+                                        <div
                                             key={emp.id}
-                                            className="px-4 py-2 hover:bg-gray-100 cursor-pointer text-sm text-[var(--foreground)]"
+                                            className="px-4 py-2 hover:bg-gray-100 cursor-pointer text-sm text-[var(--foreground)] flex justify-between items-center"
                                             onClick={() => {
                                                 setValue('assignedTo', emp.id, { shouldDirty: true });
                                                 setSearchUser(emp.name);
                                                 setIsDropdownOpen(false);
                                             }}
                                         >
-                                            {emp.name}
+                                            <span>{emp.name}</span>
+                                            {emp.department?.name && (
+                                                <div className="flex items-center bg-gray-100 px-2 py-1 rounded-lg ">
+                                                    <Briefcase className="w-3.5 h-3.5 text-[#86868B]" />
+                                                    <span className="text-[8px] px-1.5 py-0.5 rounded text-gray-500 uppercase font-bold">
+                                                        {emp.department.name}
+                                                    </span>
+                                                </div>
+                                            )}
                                         </div>
                                     ))}
                                 </div>

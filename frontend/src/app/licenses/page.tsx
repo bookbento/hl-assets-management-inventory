@@ -45,6 +45,7 @@ type LicenseFormState = {
   status: LicenseRecord["status"];
   expiryDate: string;
   price: string;
+  currency: string;
   billingCycle: string;
   annualCost: string;
   color: string;
@@ -95,13 +96,13 @@ const colorMeta: Record<string, string> = {
     "bg-amber-100 text-amber-600 dark:bg-amber-500/20 dark:text-amber-400",
 };
 
-const money = new Intl.NumberFormat("en-US", {
-  style: "currency",
-  currency: "USD",
-  maximumFractionDigits: 0,
-});
-
-const formatMoney = (value: number) => money.format(value || 0);
+const formatMoney = (value: number, currency: string = "USD") => {
+  return new Intl.NumberFormat("en-US", {
+    style: "currency",
+    currency: currency,
+    maximumFractionDigits: 0,
+  }).format(value || 0);
+};
 
 const formatDate = (value: string) =>
   new Date(value).toLocaleDateString("en-US", {
@@ -117,9 +118,10 @@ const emptyFormState = (license: LicenseRecord): LicenseFormState => ({
   totalSeats: String(license.totalSeats),
   status: license.status,
   expiryDate: license.expiryDate.split("T")[0],
-  price: license.price,
+  price: String(license.price),
+  currency: license.currency,
   billingCycle: license.billingCycle,
-  annualCost: license.annualCost,
+  annualCost: String(license.annualCost),
   color: license.color || "blue",
 });
 
@@ -263,9 +265,9 @@ export default function LicensesPage() {
         "Used Seats": license.usedSeats,
         Status: license.status,
         Expiry: formatDate(license.expiryDate),
-        Price: license.price,
+        Price: formatMoney(license.price, license.currency),
         "Billing Cycle": license.billingCycle,
-        "Annual Cost": license.annualCost,
+        "Annual Cost": formatMoney(license.annualCost, license.currency),
       }));
 
       const csv = Papa.unparse(csvData);
@@ -300,9 +302,10 @@ export default function LicensesPage() {
         totalSeats: Number(editingForm.totalSeats),
         status: editingForm.status,
         expiryDate: new Date(editingForm.expiryDate).toISOString(),
-        price: editingForm.price.startsWith('$') ? editingForm.price : `$${editingForm.price}`,
+        price: parseFloat(editingForm.price),
+        currency: editingForm.currency,
         billingCycle: editingForm.billingCycle,
-        annualCost: editingForm.annualCost.startsWith('$') ? editingForm.annualCost : `$${editingForm.annualCost}`,
+        annualCost: parseFloat(editingForm.annualCost),
         color: editingForm.color,
       },
     });
@@ -482,10 +485,10 @@ export default function LicensesPage() {
                         Annual Cost
                       </p>
                       <p className="mt-1 text-2xl font-bold text-slate-900 dark:text-white">
-                        {selectedLicense.annualCost}
+                        {formatMoney(selectedLicense.annualCost, selectedLicense.currency)}
                       </p>
                       <p className="text-xs text-slate-500">
-                        {selectedLicense.price} / {selectedLicense.billingCycle}
+                        {formatMoney(selectedLicense.price, selectedLicense.currency)} / {selectedLicense.billingCycle}
                       </p>
                     </div>
                   </div>
@@ -723,6 +726,38 @@ export default function LicensesPage() {
                           <option value="rose">Rose</option>
                           <option value="amber">Amber</option>
                         </select>
+                      ) : fieldKey === "price" || fieldKey === "annualCost" ? (
+                        <div className="flex gap-2">
+                          <select
+                            value={editingForm.currency}
+                            onChange={(e) =>
+                              setEditingForm((prev) =>
+                                prev ? { ...prev, currency: e.target.value } : prev,
+                              )
+                            }
+                            className="w-1/3 rounded-xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm outline-none focus:border-blue-500 dark:border-slate-800 dark:bg-slate-900"
+                          >
+                            <option value="USD">USD</option>
+                            <option value="EUR">EUR</option>
+                            <option value="THB">THB</option>
+                          </select>
+                          <input
+                            type="number"
+                            step="0.01"
+                            value={editingForm[fieldKey]}
+                            onChange={(e) =>
+                              setEditingForm((prev) =>
+                                prev
+                                  ? {
+                                    ...prev,
+                                    [fieldKey]: e.target.value,
+                                  }
+                                  : prev,
+                              )
+                            }
+                            className="w-2/3 rounded-xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm outline-none focus:border-blue-500 dark:border-slate-800 dark:bg-slate-900"
+                          />
+                        </div>
                       ) : (
                         <input
                           type={fieldKey === "totalSeats" ? "number" : fieldKey === "expiryDate" ? "date" : "text"}

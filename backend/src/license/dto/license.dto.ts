@@ -3,6 +3,7 @@ import {
   IsDateString,
   IsEnum,
   IsInt,
+  IsNumber,
   IsNotEmpty,
   IsOptional,
   IsString,
@@ -34,17 +35,21 @@ export class CreateLicenseDto {
   @IsNotEmpty()
   expiryDate: string;
 
-  @IsString()
+  @IsNumber()
   @IsNotEmpty()
-  price: string;
+  price: number;
+
+  @IsString()
+  @IsOptional()
+  currency?: string;
 
   @IsString()
   @IsNotEmpty()
   billingCycle: string;
 
-  @IsString()
+  @IsNumber()
   @IsNotEmpty()
-  annualCost: string;
+  annualCost: number;
 
   @IsString()
   @IsOptional()
@@ -77,17 +82,21 @@ export class UpdateLicenseDto {
   @IsOptional()
   expiryDate?: string;
 
+  @IsNumber()
+  @IsOptional()
+  price?: number;
+
   @IsString()
   @IsOptional()
-  price?: string;
+  currency?: string;
 
   @IsString()
   @IsOptional()
   billingCycle?: string;
 
-  @IsString()
+  @IsNumber()
   @IsOptional()
-  annualCost?: string;
+  annualCost?: number;
 
   @IsString()
   @IsOptional()

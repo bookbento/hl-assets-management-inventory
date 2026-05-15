@@ -130,9 +130,10 @@ model License {
   totalSeats   Int
   status       LicenseStatus       @default(ACTIVE)
   expiryDate   DateTime
-  price        String
+  price        Float
+  currency     String              @default("USD")
   billingCycle String
-  annualCost   String
+  annualCost   Float
   color        String              @default("blue")
   createdAt    DateTime            @default(now())
   updatedAt    DateTime            @updatedAt

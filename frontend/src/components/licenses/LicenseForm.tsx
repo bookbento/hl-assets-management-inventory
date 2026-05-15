@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import { useState } from "react";
 import { X, Check, Loader2 } from "lucide-react";
 import { motion } from "framer-motion";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
@@ -18,6 +18,7 @@ export function LicenseForm({ onClose, onSubmit }: LicenseFormProps) {
     type: "Subscription",
     totalSeats: "",
     price: "",
+    currency: "USD",
     billingCycle: "Annually",
     annualCost: "",
     expiryDate: "",
@@ -50,9 +51,9 @@ export function LicenseForm({ onClose, onSubmit }: LicenseFormProps) {
       totalSeats: parseInt(formData.totalSeats, 10),
       // Ensure ISO format for Prisma
       expiryDate: formData.expiryDate ? new Date(formData.expiryDate).toISOString() : "",
-      // Ensure currency format if required by DB
-      price: formData.price.startsWith('$') ? formData.price : `$${formData.price}`,
-      annualCost: formData.annualCost.startsWith('$') ? formData.annualCost : `$${formData.annualCost}`,
+      price: parseFloat(formData.price),
+      annualCost: parseFloat(formData.annualCost),
+      currency: formData.currency,
     });
   };
 
@@ -127,13 +128,24 @@ export function LicenseForm({ onClose, onSubmit }: LicenseFormProps) {
           </label>
           <label className="space-y-2 text-left">
             <span className="text-xs font-bold uppercase tracking-wider text-slate-500">Price</span>
-            <input
-              type="number"
-              step="0.01"
-              value={formData.price}
-              onChange={(e) => setFormData({ ...formData, price: e.target.value })}
-              className="w-full rounded-xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm outline-none focus:border-blue-500 dark:border-slate-800 dark:bg-slate-900"
-            />
+            <div className="flex gap-2">
+              <select
+                value={formData.currency}
+                onChange={(e) => setFormData({ ...formData, currency: e.target.value })}
+                className="w-1/3 rounded-xl border border-slate-200 bg-slate-50 px-8 py-3 text-sm outline-none focus:border-blue-500 dark:border-slate-800 dark:bg-slate-900"
+              >
+                <option value="USD">USD</option>
+                <option value="EUR">EUR</option>
+                <option value="THB">THB</option>
+              </select>
+              <input
+                type="number"
+                step="0.01"
+                value={formData.price}
+                onChange={(e) => setFormData({ ...formData, price: e.target.value })}
+                className="w-2/3 rounded-xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm outline-none focus:border-blue-500 dark:border-slate-800 dark:bg-slate-900"
+              />
+            </div>
           </label>
           <label className="space-y-2 text-left">
             <span className="text-xs font-bold uppercase tracking-wider text-slate-500">Billing Cycle</span>
@@ -146,13 +158,24 @@ export function LicenseForm({ onClose, onSubmit }: LicenseFormProps) {
           </label>
           <label className="space-y-2 text-left">
             <span className="text-xs font-bold uppercase tracking-wider text-slate-500">Annual Cost</span>
-            <input
-              type="number"
-              step="0.01"
-              value={formData.annualCost}
-              onChange={(e) => setFormData({ ...formData, annualCost: e.target.value })}
-              className="w-full rounded-xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm outline-none focus:border-blue-500 dark:border-slate-800 dark:bg-slate-900"
-            />
+            <div className="flex gap-2">
+              <select
+                value={formData.currency}
+                onChange={(e) => setFormData({ ...formData, currency: e.target.value })}
+                className="w-1/3 rounded-xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm outline-none focus:border-blue-500 dark:border-slate-800 dark:bg-slate-900"
+              >
+                <option value="USD">USD</option>
+                <option value="EUR">EUR</option>
+                <option value="THB">THB</option>
+              </select>
+              <input
+                type="number"
+                step="0.01"
+                value={formData.annualCost}
+                onChange={(e) => setFormData({ ...formData, annualCost: e.target.value })}
+                className="w-2/3 rounded-xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm outline-none focus:border-blue-500 dark:border-slate-800 dark:bg-slate-900"
+              />
+            </div>
           </label>
           <label className="space-y-2 text-left">
             <span className="text-xs font-bold uppercase tracking-wider text-slate-500">Expiry Date</span>
