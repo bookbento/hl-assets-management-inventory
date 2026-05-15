@@ -11,19 +11,25 @@ import { useSearchParams } from "next/navigation";
 
 interface EmployeeTableProps {
   onEdit: (employee: any) => void;
+  employeesData?: any[];
+  isLoadingData?: boolean;
 }
 
-export function EmployeeTable({ onEdit }: EmployeeTableProps) {
+export function EmployeeTable({ onEdit, employeesData, isLoadingData }: EmployeeTableProps) {
   const queryClient = useQueryClient();
   const searchParams = useSearchParams();
   const localSearch = searchParams?.get("search") || "";
   const [page, setPage] = useState(1);
   const limit = 10;
 
-  const { data: employees, isLoading, error } = useQuery({
+  const { data: fetchedEmployees, isLoading: isFetching, error } = useQuery({
     queryKey: ["employees"],
     queryFn: getEmployees,
+    enabled: !employeesData,
   });
+
+  const employees = employeesData || fetchedEmployees;
+  const isLoading = employeesData ? isLoadingData : isFetching;
 
   const deleteMutation = useMutation({
     mutationFn: deleteEmployee,

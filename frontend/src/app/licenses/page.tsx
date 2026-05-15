@@ -35,6 +35,7 @@ import {
 } from "@/lib/api";
 import Papa from "papaparse";
 import { toast } from "react-hot-toast";
+import Link from "next/link";
 
 type LicenseFormState = {
   name: string;
@@ -606,6 +607,13 @@ export default function LicensesPage() {
 
                 <div className="border-t border-slate-100 bg-slate-50/50 p-6 dark:border-slate-800 dark:bg-slate-900/50">
                   <div className="flex gap-3">
+                    <Link
+                      href={`/licenses/${selectedLicense.id}`}
+                      className="flex flex-1 items-center justify-center gap-2 rounded-xl btn-primary py-3 text-sm font-bold text-white shadow-lg shadow-indigo-600/20 transition-all hover:bg-indigo-500"
+                    >
+                      <Users className="h-3.5 w-3.5" />
+                      <span>View Details</span>
+                    </Link>
                     <button
                       onClick={() => {
                         setSelectedLicenseId(null);
@@ -614,7 +622,7 @@ export default function LicensesPage() {
                       className="flex flex-1 items-center justify-center gap-2 rounded-xl btn-primary py-3 text-sm font-bold text-white shadow-lg shadow-slate-900/20 transition-all hover:bg-slate-800"
                     >
                       <Pencil className="h-3.5 w-3.5" />
-                      <span>Edit License</span>
+                      <span>Edit</span>
                     </button>
                     <button
                       onClick={() => {

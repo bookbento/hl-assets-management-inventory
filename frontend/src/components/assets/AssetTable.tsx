@@ -320,14 +320,6 @@ function AssetTableContent() {
     <div className="apple-card overflow-hidden flex-1 flex flex-col min-h-0 bg-white">
       <div className="p-5 border-b border-[#D2D2D7] flex items-center justify-between">
         <h4 className="font-bold text-[#1D1D1F]">Recent Assets</h4>
-        <div className="flex gap-2">
-          <button className="px-3 py-1.5 bg-gray-100 rounded-md text-[11px] font-bold uppercase tracking-tight text-[#424245] hover:bg-gray-200 transition-colors">
-            Filter
-          </button>
-          <button className="px-3 py-1.5 bg-gray-100 rounded-md text-[11px] font-bold uppercase tracking-tight text-[#424245] hover:bg-gray-200 transition-colors">
-            Export
-          </button>
-        </div>
       </div>
       <div className="overflow-x-auto flex-1">
         <table className="w-full text-sm">
