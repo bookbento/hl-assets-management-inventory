@@ -7,7 +7,7 @@ import { getLicenseById, getEmployees } from "@/lib/api";
 import { EmployeeTable } from "@/components/employees/EmployeeTable";
 import { Loader2, ArrowLeft } from "lucide-react";
 import Link from "next/link";
-import { useMemo } from "react";
+import { Suspense, useMemo } from "react";
 import { cn } from "@/lib/utils";
 
 const colorMeta: Record<string, string> = {
@@ -18,7 +18,7 @@ const colorMeta: Record<string, string> = {
   amber: "bg-amber-100 text-amber-600 dark:bg-amber-500/20 dark:text-amber-400",
 };
 
-export default function LicenseDetailPage() {
+function LicenseDetailPageContent() {
   const params = useParams();
   const router = useRouter();
   const id = params?.id as string;
@@ -129,5 +129,13 @@ export default function LicenseDetailPage() {
         )}
       </div>
     </DashboardShell>
+  );
+}
+
+export default function LicenseDetailPage() {
+  return (
+    <Suspense fallback={<div className="min-h-[400px]" />}>
+      <LicenseDetailPageContent />
+    </Suspense>
   );
 }

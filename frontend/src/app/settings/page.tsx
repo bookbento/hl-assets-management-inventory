@@ -12,6 +12,7 @@ import {
   Monitor,
 } from "lucide-react";
 import { motion } from "framer-motion";
+import { Suspense } from "react";
 
 const settingsSections = [
   {
@@ -62,7 +63,7 @@ const settingsSections = [
   },
 ];
 
-export default function SettingsPage() {
+function SettingsPageContent() {
   return (
     <DashboardShell>
       <div className="mb-10 text-left">
@@ -148,5 +149,13 @@ export default function SettingsPage() {
         </div>
       </div>
     </DashboardShell>
+  );
+}
+
+export default function SettingsPage() {
+  return (
+    <Suspense fallback={<div className="min-h-[400px]" />}>
+      <SettingsPageContent />
+    </Suspense>
   );
 }
