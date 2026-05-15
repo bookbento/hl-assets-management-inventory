@@ -15,5 +15,15 @@
     "@types/node": "^20",
     "concurrently": "^9.2.1",
     "typescript": "^5"
+  },
+  "pnpm": {
+    "onlyBuiltDependencies": [
+      "@prisma/client",
+      "@prisma/engines",
+      "prisma",
+      "sharp",
+      "core-js",
+      "unrs-resolver"
+    ]
   }
 }
