@@ -13,6 +13,21 @@ export const authOptions: NextAuthOptions = {
       async authorize(credentials) {
         if (!credentials) return null;
 
+        if (process.env.NEXT_PUBLIC_USE_MOCK === "true") {
+          const mockUsers: Record<string, { role: string }> = {
+            admin: { role: "admin" },
+            user:  { role: "user" },
+          };
+          const mock = mockUsers[credentials.username];
+          if (!mock) return null;
+          return {
+            id: credentials.username,
+            username: credentials.username,
+            role: mock.role,
+            access_token: "mock-token",
+          };
+        }
+
         try {
           const res = await fetch(`${API_URL}/auth/login`, {
             method: "POST",

@@ -2,6 +2,17 @@
 import { Asset, AssetCategory, AssetStatus } from "@prisma/client";
 import { getSession } from "next-auth/react";
 import { API_URL } from "@/lib/config";
+import {
+  MOCK_ASSETS,
+  MOCK_ASSET_SUMMARY,
+  MOCK_EMPLOYEES,
+  MOCK_BUSINESS_UNITS,
+  MOCK_LICENSES,
+  MOCK_LICENSE_SUMMARY,
+  MOCK_EXPIRING_SOON,
+} from "@/lib/mockups/mock-db-data";
+
+const USE_MOCK = process.env.NEXT_PUBLIC_USE_MOCK === "true";
 
 type AssetRecord = Asset & {
   imageUrl?: string | null;
@@ -141,6 +152,21 @@ interface PaginatedResponse<T> {
 }
 
 export const getAssets = async (query: AssetsQuery = {}): Promise<PaginatedResponse<AssetRecord>> => {
+  if (USE_MOCK) {
+    let data = (MOCK_ASSETS as unknown as any[]).slice();
+    if (query.search) {
+      const q = query.search.toLowerCase();
+      data = data.filter((a) => a.name.toLowerCase().includes(q) || a.serialNumber?.toLowerCase().includes(q));
+    }
+    if (query.category) data = data.filter((a) => a.category === query.category);
+    if (query.status) data = data.filter((a) => a.status === query.status);
+    const page = query.page ?? 1;
+    const limit = query.limit ?? 10;
+    const total = data.length;
+    const start = (page - 1) * limit;
+    return { data: data.slice(start, start + limit), total, page, limit, totalPages: Math.ceil(total / limit) };
+  }
+
   const params = new URLSearchParams();
   if (query.search) params.append("search", query.search);
   if (query.category) params.append("category", query.category);
@@ -158,6 +184,11 @@ export const getAssets = async (query: AssetsQuery = {}): Promise<PaginatedRespo
 };
 
 export const getAssetById = async (id: string): Promise<AssetRecord> => {
+  if (USE_MOCK) {
+    const found = (MOCK_ASSETS as unknown as any[]).find((a) => a.id === id);
+    if (!found) throw new Error("Asset not found");
+    return found;
+  }
   const res = await authenticatedFetch(`${API_URL}/assets/${id}`);
   if (!res.ok) {
     throw new Error("Failed to fetch asset");
@@ -191,6 +222,7 @@ export const unassignAsset = async (payload: { assetId: string }): Promise<any> 
 };
 
 export const getAssetSummary = async (): Promise<any> => {
+  if (USE_MOCK) return MOCK_ASSET_SUMMARY;
   const res = await authenticatedFetch(`${API_URL}/assets/summary`);
   if (!res.ok) {
     throw new Error("Failed to fetch asset summary");
@@ -199,6 +231,7 @@ export const getAssetSummary = async (): Promise<any> => {
 };
 
 export const getLicenses = async (): Promise<LicenseRecord[]> => {
+  if (USE_MOCK) return MOCK_LICENSES as any;
   const res = await authenticatedFetch(`${API_URL}/licenses`);
   if (!res.ok) {
     throw new Error("Failed to fetch licenses");
@@ -207,6 +240,7 @@ export const getLicenses = async (): Promise<LicenseRecord[]> => {
 };
 
 export const getLicenseSummary = async (): Promise<LicenseSummary> => {
+  if (USE_MOCK) return MOCK_LICENSE_SUMMARY as any;
   const res = await authenticatedFetch(`${API_URL}/licenses/summary`);
   if (!res.ok) {
     throw new Error("Failed to fetch license summary");
@@ -215,6 +249,7 @@ export const getLicenseSummary = async (): Promise<LicenseSummary> => {
 };
 
 export const getExpiringSoonLicenses = async (): Promise<LicenseExpiryAlert[]> => {
+  if (USE_MOCK) return MOCK_EXPIRING_SOON as any;
   const res = await authenticatedFetch(`${API_URL}/licenses/expiring-soon`);
   if (!res.ok) {
     throw new Error("Failed to fetch expiring licenses");
@@ -223,6 +258,11 @@ export const getExpiringSoonLicenses = async (): Promise<LicenseExpiryAlert[]> =
 };
 
 export const getLicenseById = async (id: string): Promise<LicenseRecord> => {
+  if (USE_MOCK) {
+    const found = (MOCK_LICENSES as any[]).find((l) => l.id === id);
+    if (!found) throw new Error("License not found");
+    return found;
+  }
   const res = await authenticatedFetch(`${API_URL}/licenses/${id}`);
   if (!res.ok) {
     throw new Error("Failed to fetch license");
@@ -265,6 +305,7 @@ export const unassignLicense = async (
 };
 
 export const getEmployees = async (): Promise<EmployeeRecord[]> => {
+  if (USE_MOCK) return MOCK_EMPLOYEES as any;
   const res = await authenticatedFetch(`${API_URL}/employees`);
   if (!res.ok) {
     throw new Error("Failed to fetch employees");
@@ -273,6 +314,7 @@ export const getEmployees = async (): Promise<EmployeeRecord[]> => {
 };
 
 export const getBusinessUnits = async (): Promise<any[]> => {
+  if (USE_MOCK) return MOCK_BUSINESS_UNITS as any;
   const res = await authenticatedFetch(`${API_URL}/business-unit`);
   if (!res.ok) {
     throw new Error("Failed to fetch organizational structure");
