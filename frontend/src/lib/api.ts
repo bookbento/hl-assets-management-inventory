@@ -1,5 +1,5 @@
 // frontend/src/lib/api.ts
-import { Asset, AssetCategory, AssetStatus } from "@prisma/client";
+import { Asset, AssetCategory, AssetStatus } from "@/lib/mockups/types";
 import { getSession } from "next-auth/react";
 import { API_URL } from "@/lib/config";
 import {
