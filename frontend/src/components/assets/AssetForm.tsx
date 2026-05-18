@@ -4,7 +4,7 @@ import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
 import { AssetCategory, AssetStatus } from '@/lib/mockups/types';
-import { X, Upload, Info, Image as ImageIcon, Trash2, Briefcase } from 'lucide-react';
+import { X, Upload, Info, Image as ImageIcon, Trash2, Briefcase, ChevronLeft, ChevronRight } from 'lucide-react';
 import { motion } from 'framer-motion';
 import { cn } from '@/lib/utils';
 import { useEffect, useMemo, useRef, useState } from 'react';
@@ -38,7 +38,7 @@ const statusLabels = {
 
 export type AssetFormValues = z.infer<typeof assetSchema>;
 export type AssetFormSubmitValues = AssetFormValues & {
-    imageFile?: File | null;
+    imageFiles?: File[];
     imageUrl?: string | null;
     removeImage?: string;
 };
@@ -46,7 +46,7 @@ export type AssetFormSubmitValues = AssetFormValues & {
 interface AssetFormProps {
     onClose: () => void;
     onSubmit: (data: AssetFormSubmitValues) => void;
-    initialData?: Partial<AssetFormValues> & { imageUrl?: string | null };
+    initialData?: Partial<AssetFormValues> & { imageUrl?: string | null; images?: string[] };
     title?: string;
     isModal?: boolean;
     employees?: any[];
@@ -61,12 +61,17 @@ export function AssetForm({
     employees = []
 }: AssetFormProps) {
     const fileInputRef = useRef<HTMLInputElement>(null);
-    const [selectedFile, setSelectedFile] = useState<File | null>(null);
-    const [previewUrl, setPreviewUrl] = useState<string | null>(
-        initialData?.imageUrl ? resolveMediaUrl(initialData.imageUrl) : null
-    );
+    const [selectedFiles, setSelectedFiles] = useState<File[]>([]);
+    const [selectedPreviewUrls, setSelectedPreviewUrls] = useState<string[]>([]);
+    const [activePreviewIndex, setActivePreviewIndex] = useState(0);
     const [removeExistingImage, setRemoveExistingImage] = useState(false);
     const [dragActive, setDragActive] = useState(false);
+    const existingImageUrls = useMemo(() => {
+        if (initialData?.images?.length) {
+            return initialData.images;
+        }
+        return initialData?.imageUrl ? [initialData.imageUrl] : [];
+    }, [initialData]);
 
     const {
         register,
@@ -86,8 +91,9 @@ export function AssetForm({
     useEffect(() => {
         if (initialData) {
             reset(initialData);
-            setPreviewUrl(initialData.imageUrl ? resolveMediaUrl(initialData.imageUrl) : null);
-            setSelectedFile(null);
+            setSelectedFiles([]);
+            setSelectedPreviewUrls([]);
+            setActivePreviewIndex(0);
             setRemoveExistingImage(false);
         }
     }, [initialData, reset]);
@@ -132,47 +138,109 @@ export function AssetForm({
     }, [selectedEmployee]);
 
     useEffect(() => {
-        if (!selectedFile) return;
-        const objectUrl = URL.createObjectURL(selectedFile);
-        setPreviewUrl(objectUrl);
-        return () => URL.revokeObjectURL(objectUrl);
-    }, [selectedFile]);
+        const urls = selectedFiles.map((file) => URL.createObjectURL(file));
+        setSelectedPreviewUrls(urls);
 
-    const handleFileSelect = (file?: File) => {
-        if (!file || !file.type.startsWith('image/')) return;
+        return () => {
+            urls.forEach((url) => URL.revokeObjectURL(url));
+        };
+    }, [selectedFiles]);
+
+    const combinedImages = useMemo(() => {
+        const currentExisting = removeExistingImage ? [] : existingImageUrls.map((url) => ({
+            type: 'existing' as const,
+            url: resolveMediaUrl(url) || url,
+            source: url,
+        }));
+
+        const currentNew = selectedPreviewUrls.map((url, index) => ({
+            type: 'new' as const,
+            url,
+            source: selectedFiles[index]?.name || `Upload ${index + 1}`,
+        }));
+
+        return [...currentExisting, ...currentNew];
+    }, [existingImageUrls, removeExistingImage, selectedFiles, selectedPreviewUrls]);
+
+    useEffect(() => {
+        if (activePreviewIndex >= combinedImages.length) {
+            setActivePreviewIndex(0);
+        }
+    }, [activePreviewIndex, combinedImages.length]);
+
+    const activePreview = combinedImages[activePreviewIndex];
+
+    const handleFileSelect = (files?: FileList | File[]) => {
+        const list = Array.from(files || []);
+        const validFiles = list.filter((file) => file.type.startsWith('image/'));
+        if (!validFiles.length) return;
+
         setRemoveExistingImage(false);
-        setSelectedFile(file);
+        setSelectedFiles((current) => [...current, ...validFiles]);
     };
 
-    const clearFile = () => {
-        setSelectedFile(null);
-        setPreviewUrl(null);
-        setRemoveExistingImage(Boolean(initialData?.imageUrl));
+    const removeSelectedFile = (index: number) => {
+        setSelectedFiles((current) => current.filter((_, currentIndex) => currentIndex !== index));
+        setActivePreviewIndex((current) => Math.max(0, Math.min(current, combinedImages.length - 2)));
+    };
+
+    const clearAllFiles = () => {
+        setSelectedFiles([]);
+        setSelectedPreviewUrls([]);
+        setRemoveExistingImage(Boolean(existingImageUrls.length));
         if (fileInputRef.current) {
             fileInputRef.current.value = '';
         }
     };
 
     const imageBox = useMemo(() => {
-        if (previewUrl) {
+        if (activePreview) {
             return (
-                <div className="relative w-full h-full min-h-[220px] overflow-hidden rounded-xl border border-[var(--border)] bg-[var(--surface-soft)]">
+                <div className="relative w-full min-h-[220px] overflow-hidden rounded-xl border border-[var(--border)] bg-[var(--surface-soft)]">
                     <img
-                        src={previewUrl}
+                        src={activePreview.url}
                         alt="Asset preview"
-                        className="h-full w-full object-cover"
+                        className="h-[220px] w-full object-cover"
                     />
-                    <div className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/60 to-transparent p-4 text-white">
+                    {combinedImages.length > 1 && (
+                        <>
+                            <button
+                                type="button"
+                                onClick={(e) => {
+                                    e.stopPropagation();
+                                    setActivePreviewIndex((current) => (current - 1 + combinedImages.length) % combinedImages.length);
+                                }}
+                                className="absolute left-3 top-1/2 -translate-y-1/2 rounded-full bg-black/50 p-2 text-white hover:bg-black/70"
+                            >
+                                <ChevronLeft className="w-4 h-4" />
+                            </button>
+                            <button
+                                type="button"
+                                onClick={(e) => {
+                                    e.stopPropagation();
+                                    setActivePreviewIndex((current) => (current + 1) % combinedImages.length);
+                                }}
+                                className="absolute right-3 top-1/2 -translate-y-1/2 rounded-full bg-black/50 p-2 text-white hover:bg-black/70"
+                            >
+                                <ChevronRight className="w-4 h-4" />
+                            </button>
+                        </>
+                    )}
+                    <div className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/70 to-transparent p-4 text-white">
                         <div className="flex items-center justify-between gap-3">
                             <div className="flex items-center gap-2 text-xs font-semibold">
                                 <ImageIcon className="w-4 h-4" />
-                                <span>{selectedFile ? selectedFile.name : 'Current image'}</span>
+                                <span>
+                                    {activePreview.type === 'existing'
+                                        ? `Existing image ${activePreviewIndex + 1}`
+                                        : activePreview.source}
+                                </span>
                             </div>
                             <button
                                 type="button"
                                 onClick={(e) => {
                                     e.stopPropagation();
-                                    clearFile();
+                                    clearAllFiles();
                                 }}
                                 className="rounded-full bg-black/30 p-2 hover:bg-black/45"
                             >
@@ -196,7 +264,7 @@ export function AssetForm({
                 <p className="text-xs text-[var(--muted-foreground)] font-medium">PNG, JPG or WebP (max. 2MB)</p>
             </div>
         );
-    }, [clearFile, dragActive, previewUrl, selectedFile]);
+    }, [activePreview, clearAllFiles, combinedImages.length, dragActive]);
 
     const formContent = (
         <div className={cn(
@@ -216,7 +284,7 @@ export function AssetForm({
                 onSubmit={handleSubmit((values) =>
                     onSubmit({
                         ...values,
-                        imageFile: selectedFile,
+                        imageFiles: selectedFiles,
                         removeImage: removeExistingImage ? 'true' : undefined,
                     })
                 )}
@@ -229,8 +297,9 @@ export function AssetForm({
                             ref={fileInputRef}
                             type="file"
                             accept="image/*"
+                            multiple
                             className="hidden"
-                            onChange={(e) => handleFileSelect(e.target.files?.[0])}
+                            onChange={(e) => handleFileSelect(e.target.files || undefined)}
                         />
                         <div
                             role="button"
@@ -244,11 +313,60 @@ export function AssetForm({
                             onDrop={(e) => {
                                 e.preventDefault();
                                 setDragActive(false);
-                                handleFileSelect(e.dataTransfer.files?.[0]);
+                                handleFileSelect(e.dataTransfer.files);
                             }}
                         >
                             {imageBox}
                         </div>
+                        {combinedImages.length > 0 && (
+                            <div className="mt-3 flex flex-wrap gap-2">
+                                {(() => {
+                                    const existingCount = removeExistingImage ? 0 : existingImageUrls.length;
+
+                                    return combinedImages.map((image, index) => {
+                                        const isActive = index === activePreviewIndex;
+                                        const isNew = image.type === 'new';
+                                        const selectedIndex = isNew ? index - existingCount : -1;
+
+                                        return (
+                                            <div
+                                                key={`${image.source}-${index}`}
+                                                role="button"
+                                                tabIndex={0}
+                                                onClick={() => setActivePreviewIndex(index)}
+                                                className={cn(
+                                                    "relative h-16 w-16 overflow-hidden rounded-lg border transition-all cursor-pointer",
+                                                    isActive ? "border-primary ring-2 ring-primary/20" : "border-[var(--border)]"
+                                                )}
+                                            >
+                                                <img src={image.url} alt={`Preview ${index + 1}`} className="h-full w-full object-cover" />
+                                                {isNew && selectedIndex >= 0 && (
+                                                    <button
+                                                        type="button"
+                                                        onClick={(e) => {
+                                                            e.stopPropagation();
+                                                            removeSelectedFile(selectedIndex);
+                                                        }}
+                                                        className="absolute right-1 top-1 rounded-full bg-black/60 p-0.5 text-white"
+                                                    >
+                                                        <X className="h-3 w-3" />
+                                                    </button>
+                                                )}
+                                            </div>
+                                        );
+                                    });
+                                })()}
+                                {existingImageUrls.length > 0 && !removeExistingImage && (
+                                    <button
+                                        type="button"
+                                        onClick={() => setRemoveExistingImage(true)}
+                                        className="h-16 rounded-lg border border-dashed border-[var(--border)] px-3 text-xs font-semibold text-[var(--muted-foreground)] hover:border-red-300 hover:text-red-600"
+                                    >
+                                        Remove existing
+                                    </button>
+                                )}
+                            </div>
+                        )}
                     </div>
 
                     <div className="space-y-4">
@@ -386,11 +504,11 @@ export function AssetForm({
                         >
                             Cancel
                         </button>
-                        <button
-                            type="submit"
-                            disabled={isSubmitting}
-                            className="btn-primary"
-                        >
+                <button
+                    type="submit"
+                    disabled={isSubmitting}
+                    className="btn-primary"
+                >
                             {isSubmitting ? 'Saving...' : 'Save'}
                         </button>
                     </div>

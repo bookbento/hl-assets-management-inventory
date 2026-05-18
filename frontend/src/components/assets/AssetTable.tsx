@@ -17,6 +17,7 @@ import { getAssets, deleteAsset, updateAsset, getEmployees, assignAsset, unassig
 import { resolveMediaUrl } from "@/lib/config";
 import { toast } from "react-hot-toast";
 import { AssetForm, AssetFormValues } from "./AssetForm";
+import { AssetImageViewer } from "./AssetImageViewer";
 import { motion, AnimatePresence } from "framer-motion";
 import { useSearchParams } from "next/navigation";
 
@@ -27,6 +28,12 @@ type AssetRow = {
   category: AssetCategory;
   status: AssetStatus;
   imageUrl?: string | null;
+  images?: string[];
+  assetImages?: Array<{
+    id: string;
+    url: string;
+    sortOrder: number;
+  }>;
   assignedTo?: string | null;
   purchaseDate?: string | Date | null;
   warrantyExpiry?: string | Date | null;
@@ -84,6 +91,10 @@ function AssetTableContent() {
   const [notification, setNotification] = React.useState<{ title: string; message: string } | null>(null);
   const [editingAsset, setEditingAsset] = React.useState<AssetRow | null>(null);
   const [formInitialData, setFormInitialData] = React.useState<Partial<AssetFormValues> | null>(null);
+  const [imageViewerImages, setImageViewerImages] = React.useState<string[]>([]);
+  const [imageViewerTitle, setImageViewerTitle] = React.useState<string>("");
+  const [imageViewerOpen, setImageViewerOpen] = React.useState(false);
+  const [imageViewerIndex, setImageViewerIndex] = React.useState(0);
 
   // --- Delete Logic ---
   const deleteMutation = useMutation({
@@ -164,13 +175,21 @@ function AssetTableContent() {
 
   const handleEdit = (asset: AssetRow) => {
     const currentAssignment = asset.employeeAssets?.[0];
-    const formattedData: Partial<AssetFormValues> & { imageUrl?: string | null } = {
+    const images = asset.images?.length
+      ? asset.images
+      : asset.assetImages?.length
+        ? asset.assetImages.map((image) => image.url)
+        : asset.imageUrl
+          ? [asset.imageUrl]
+          : [];
+    const formattedData: Partial<AssetFormValues> & { imageUrl?: string | null; images?: string[] } = {
       name: asset.name,
       serialNumber: asset.serialNumber,
       category: asset.category as AssetFormValues["category"],
       status: asset.status as AssetFormValues["status"],
       assignedTo: currentAssignment?.employeeId || "",
-      imageUrl: asset.imageUrl ?? undefined,
+      imageUrl: images[0] ?? asset.imageUrl ?? undefined,
+      images,
       // Ensure dates are in YYYY-MM-DD format for input type="date"
       purchaseDate: asset.purchaseDate ? new Date(asset.purchaseDate).toISOString().split('T')[0] : '',
       warrantyExpiry: asset.warrantyExpiry ? new Date(asset.warrantyExpiry).toISOString().split('T')[0] : '',
@@ -185,17 +204,46 @@ function AssetTableContent() {
       header: "Asset Name",
       cell: ({ row }) => (
         <div className="flex items-center gap-3">
-          <div className="w-11 h-11 rounded-md border border-[var(--border)] bg-[var(--surface-soft)] overflow-hidden shrink-0 flex items-center justify-center">
-            {row.original.imageUrl ? (
-              <img
-                src={resolveMediaUrl(row.original.imageUrl) || undefined}
-                alt={row.getValue("name")}
-                className="h-full w-full object-contain"
-              />
-            ) : (
-              <ImageIcon className="w-5 h-5 text-[var(--muted-foreground)]" />
-            )}
-          </div>
+          {(() => {
+            const images = row.original.images?.length
+              ? row.original.images
+              : row.original.assetImages?.length
+                ? row.original.assetImages.map((image) => image.url)
+                : row.original.imageUrl
+                  ? [row.original.imageUrl]
+                  : [];
+            const primaryImage = images[0];
+
+            return (
+              <button
+                type="button"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  if (!images.length) return;
+                  setImageViewerImages(images);
+                  setImageViewerTitle(String(row.getValue("name")));
+                  setImageViewerIndex(0);
+                  setImageViewerOpen(true);
+                }}
+                className="relative w-11 h-11 rounded-md border border-[var(--border)] bg-[var(--surface-soft)] overflow-hidden shrink-0 flex items-center justify-center"
+              >
+                {primaryImage ? (
+                  <img
+                    src={resolveMediaUrl(primaryImage) || undefined}
+                    alt={row.getValue("name")}
+                    className="h-full w-full object-cover"
+                  />
+                ) : (
+                  <ImageIcon className="w-5 h-5 text-[var(--muted-foreground)]" />
+                )}
+                {images.length > 1 && (
+                  <span className="absolute bottom-0 right-0 rounded-tl-md bg-black/70 px-1.5 py-0.5 text-[10px] font-semibold text-white">
+                    +{images.length - 1}
+                  </span>
+                )}
+              </button>
+            );
+          })()}
           <div className="text-left">
             <div className="font-bold text-[#1D1D1F] text-sm">
               {row.getValue("name")}
@@ -447,6 +495,13 @@ function AssetTableContent() {
           isModal={true}
         />
       )}
+      <AssetImageViewer
+        open={imageViewerOpen}
+        images={imageViewerImages}
+        initialIndex={imageViewerIndex}
+        title={imageViewerTitle}
+        onClose={() => setImageViewerOpen(false)}
+      />
       {/* Success Notification Toast */}
       <AnimatePresence>
         {notification && (

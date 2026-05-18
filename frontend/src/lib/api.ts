@@ -5,6 +5,12 @@ import { API_URL } from "@/lib/config";
 
 type AssetRecord = Asset & {
   imageUrl?: string | null;
+  images?: string[];
+  assetImages?: Array<{
+    id: string;
+    url: string;
+    sortOrder: number;
+  }>;
 };
 
 type EmployeeRecord = {
@@ -79,6 +85,16 @@ const toFormData = (payload: Record<string, any>) => {
 
   Object.entries(payload).forEach(([key, value]) => {
     if (value === undefined || value === null || value === "") return;
+    if (Array.isArray(value)) {
+      value.forEach((item) => {
+        if (item instanceof File) {
+          formData.append("images", item);
+        } else if (item !== undefined && item !== null && item !== "") {
+          formData.append(key, item instanceof Date ? item.toISOString() : String(item));
+        }
+      });
+      return;
+    }
     if (value instanceof File) {
       formData.append("image", value);
       return;
@@ -98,7 +114,7 @@ async function submitPayload<T>(
   const isFormData =
     payload instanceof FormData ||
     (payload instanceof Object &&
-      Object.values(payload).some((value) => value instanceof File));
+      Object.values(payload).some((value) => value instanceof File || Array.isArray(value)));
   const body = payload instanceof FormData ? payload : isFormData ? toFormData(payload) : JSON.stringify(payload);
   const res = await authenticatedFetch(url, {
     method,

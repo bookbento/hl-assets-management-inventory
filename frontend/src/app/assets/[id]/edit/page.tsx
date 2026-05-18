@@ -62,6 +62,9 @@ export default function EditAssetPage() {
     purchaseDate: asset.purchaseDate ? new Date(asset.purchaseDate).toISOString().split('T')[0] : '',
     warrantyExpiry: asset.warrantyExpiry ? new Date(asset.warrantyExpiry).toISOString().split('T')[0] : '',
     imageUrl: asset.imageUrl,
+    images: asset.images?.length
+      ? asset.images
+      : asset.assetImages?.map((image: any) => image.url) || (asset.imageUrl ? [asset.imageUrl] : []),
   };
 
   return (

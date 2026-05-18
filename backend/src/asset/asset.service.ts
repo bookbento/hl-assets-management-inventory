@@ -2,14 +2,85 @@ import { Injectable, BadRequestException } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
 import { CreateAssetDto, UpdateAssetDto, AssignAssetDto, UnassignAssetDto } from './dto/asset.dto';
 
+type AssetImageInput = {
+  imageUrl?: string | null;
+  imageUrls?: string[];
+  removeImage?: boolean | string;
+};
+
+const assetIncludes = {
+  employeeAssets: {
+    include: { employee: true },
+  },
+  assetImages: {
+    orderBy: {
+      sortOrder: 'asc' as const,
+    },
+  },
+};
+
 @Injectable()
 export class AssetService {
   constructor(private prisma: PrismaService) {}
+  private assetImageTableExists: boolean | null = null;
 
-  create(createAssetDto: CreateAssetDto) {
-    return this.prisma.asset.create({
-      data: createAssetDto,
+  private dedupeImages(images: Array<string | null | undefined>) {
+    return [...new Set(images.filter(Boolean) as string[])];
+  }
+
+  private async hasAssetImageTable() {
+    if (this.assetImageTableExists !== null) {
+      return this.assetImageTableExists;
+    }
+
+    const result = await this.prisma.$queryRaw<Array<{ exists: boolean }>>`
+      SELECT to_regclass('public."AssetImage"') IS NOT NULL AS "exists"
+    `;
+
+    this.assetImageTableExists = Boolean(result[0]?.exists);
+    return this.assetImageTableExists;
+  }
+
+  private normalizeImages(asset: any) {
+    const assetImages = asset.assetImages || [];
+    const legacyImage = asset.imageUrl ? [{ url: asset.imageUrl, sortOrder: -1 }] : [];
+    const images = [...legacyImage, ...assetImages].map((image) => image.url);
+    const uniqueImages = this.dedupeImages(images);
+
+    return {
+      ...asset,
+      images: uniqueImages,
+    };
+  }
+
+  async create(createAssetDto: CreateAssetDto & AssetImageInput) {
+    const { imageUrls = [], imageUrl, ...payload } = createAssetDto;
+    const images = this.dedupeImages([imageUrl, ...imageUrls]);
+    const supportsMultiImages = await this.hasAssetImageTable();
+    const include = {
+      employeeAssets: {
+        include: { employee: true },
+      },
+      ...(supportsMultiImages ? { assetImages: assetIncludes.assetImages } : {}),
+    };
+
+    const asset = await this.prisma.asset.create({
+      data: {
+        ...payload,
+        imageUrl: images[0] || null,
+        assetImages: supportsMultiImages && images.length
+          ? {
+              create: images.map((url, index) => ({
+                url,
+                sortOrder: index,
+              })),
+            }
+          : undefined,
+      },
+      include,
     });
+
+    return this.normalizeImages(asset);
   }
 
   async findAll(query: any = {}) {
@@ -26,6 +97,8 @@ export class AssetService {
     if (category) where.category = category;
     if (status) where.status = status;
 
+    const supportsMultiImages = await this.hasAssetImageTable();
+
     const [data, total] = await Promise.all([
       this.prisma.asset.findMany({
         where,
@@ -34,6 +107,7 @@ export class AssetService {
             where: { returnDate: null },
             include: { employee: true },
           },
+          ...(supportsMultiImages ? { assetImages: assetIncludes.assetImages } : {}),
         },
         orderBy: sortBy ? { [sortBy]: sortOrder || 'asc' } : { createdAt: 'desc' },
         skip: Number(skip),
@@ -43,7 +117,7 @@ export class AssetService {
     ]);
 
     return {
-      data,
+      data: data.map((asset) => this.normalizeImages(asset)),
       total,
       page: Number(page),
       limit: Number(limit),
@@ -73,21 +147,69 @@ export class AssetService {
   }
 
   findOne(id: string) {
-    return this.prisma.asset.findUnique({
-      where: { id },
-      include: {
-        employeeAssets: {
-          include: { employee: true },
+    return this.hasAssetImageTable().then((supportsMultiImages) =>
+      this.prisma.asset.findUnique({
+        where: { id },
+        include: {
+          employeeAssets: {
+            include: { employee: true },
+          },
+          ...(supportsMultiImages ? { assetImages: assetIncludes.assetImages } : {}),
         },
-      },
-    });
+      }).then((asset) => (asset ? this.normalizeImages(asset) : null)),
+    );
   }
 
-  update(id: string, updateAssetDto: UpdateAssetDto) {
-    return this.prisma.asset.update({
-      where: { id },
-      data: updateAssetDto,
+  async update(id: string, updateAssetDto: UpdateAssetDto & AssetImageInput) {
+    const { imageUrls = [], imageUrl, removeImage, ...payload } = updateAssetDto;
+    const newImages = this.dedupeImages([imageUrl, ...imageUrls]);
+    const supportsMultiImages = await this.hasAssetImageTable();
+
+    const asset = await this.prisma.$transaction(async (tx) => {
+      if (removeImage && supportsMultiImages) {
+        await tx.assetImage.deleteMany({
+          where: { assetId: id },
+        });
+      }
+
+      const updated = await tx.asset.update({
+        where: { id },
+        data: {
+          ...payload,
+          ...(removeImage ? { imageUrl: null } : {}),
+          ...(newImages[0] ? { imageUrl: newImages[0] } : {}),
+        },
+        include: {
+          employeeAssets: {
+            include: { employee: true },
+          },
+          ...(supportsMultiImages ? { assetImages: assetIncludes.assetImages } : {}),
+        },
+      });
+
+      if (supportsMultiImages && newImages.length) {
+        const startOrder = removeImage ? 0 : updated.assetImages.length;
+        await tx.assetImage.createMany({
+          data: newImages.map((url, index) => ({
+            assetId: id,
+            url,
+            sortOrder: startOrder + index,
+          })),
+        });
+      }
+
+      return tx.asset.findUnique({
+        where: { id },
+        include: {
+          employeeAssets: {
+            include: { employee: true },
+          },
+          ...(supportsMultiImages ? { assetImages: assetIncludes.assetImages } : {}),
+        },
+      });
     });
+
+    return asset ? this.normalizeImages(asset) : null;
   }
 
   remove(id: string) {

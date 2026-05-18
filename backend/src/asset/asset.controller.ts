@@ -1,11 +1,11 @@
-import { Controller, Get, Post, Body, Patch, Param, Delete, UseGuards, Query, UploadedFile, UseInterceptors } from '@nestjs/common';
+import { Controller, Get, Post, Body, Patch, Param, Delete, UseGuards, Query, UploadedFiles, UseInterceptors } from '@nestjs/common';
 import { AssetService } from './asset.service';
 import { CreateAssetDto, UpdateAssetDto, AssignAssetDto, UnassignAssetDto } from './dto/asset.dto';
 import { JwtAuthGuard } from '../auth/jwt-auth.guard';
 import { RolesGuard } from '../auth/roles.guard';
 import { Roles } from '../auth/roles.decorator';
 import { Role } from '@prisma/client';
-import { FileInterceptor } from '@nestjs/platform-express';
+import { FileFieldsInterceptor } from '@nestjs/platform-express';
 import { extname, join } from 'path';
 import { existsSync, mkdirSync } from 'fs';
 
@@ -38,17 +38,35 @@ const uploadOptions = {
   },
 };
 
+const extractImageUrls = (files?: { image?: any[]; images?: any[] }) => {
+  const primary = files?.image?.[0];
+  const gallery = files?.images || [];
+  return [primary, ...gallery].filter(Boolean).map((file) => `/uploads/${file.filename}`);
+};
+
 @Controller('assets')
 @UseGuards(JwtAuthGuard)
 export class AssetController {
   constructor(private readonly assetService: AssetService) {}
 
   @Post()
-  @UseInterceptors(FileInterceptor('image', uploadOptions))
-  create(@Body() createAssetDto: CreateAssetDto, @UploadedFile() file?: any) {
-    const imageUrl = file ? `/uploads/${file.filename}` : undefined;
+  @UseInterceptors(
+    FileFieldsInterceptor(
+      [
+        { name: 'image', maxCount: 1 },
+        { name: 'images', maxCount: 10 },
+      ],
+      uploadOptions,
+    ),
+  )
+  create(@Body() createAssetDto: CreateAssetDto, @UploadedFiles() files?: any) {
+    const imageUrls = extractImageUrls(files);
     const { removeImage, ...payload } = createAssetDto as CreateAssetDto & { removeImage?: string };
-    return this.assetService.create({ ...payload, imageUrl });
+    return this.assetService.create({
+      ...payload,
+      imageUrls,
+      imageUrl: imageUrls[0] ?? payload.imageUrl,
+    });
   }
 
   @Get('summary')
@@ -67,19 +85,29 @@ export class AssetController {
   }
 
   @Patch(':id')
-  @UseInterceptors(FileInterceptor('image', uploadOptions))
+  @UseInterceptors(
+    FileFieldsInterceptor(
+      [
+        { name: 'image', maxCount: 1 },
+        { name: 'images', maxCount: 10 },
+      ],
+      uploadOptions,
+    ),
+  )
   update(
     @Param('id') id: string,
     @Body() updateAssetDto: UpdateAssetDto,
-    @UploadedFile() file?: any,
+    @UploadedFiles() files?: any,
   ) {
-    const imageUrl = file ? `/uploads/${file.filename}` : undefined;
+    const imageUrls = extractImageUrls(files);
     const shouldRemoveImage = updateAssetDto.removeImage === 'true';
     const { removeImage, ...payload } = updateAssetDto as UpdateAssetDto & { removeImage?: string };
 
     return this.assetService.update(id, {
       ...payload,
-      ...(imageUrl ? { imageUrl } : shouldRemoveImage ? { imageUrl: null } : {}),
+      imageUrls,
+      ...(imageUrls[0] ? { imageUrl: imageUrls[0] } : payload.imageUrl ? { imageUrl: payload.imageUrl } : {}),
+      ...(shouldRemoveImage ? { removeImage: 'true' } : {}),
     });
   }
 
