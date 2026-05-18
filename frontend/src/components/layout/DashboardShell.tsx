@@ -173,11 +173,37 @@ function DashboardShellContent({
                   aria-expanded={isNotificationOpen}
                   className="relative flex items-center justify-center rounded-full border border-[#D2D2D7] bg-white p-2 shadow-sm transition-all hover:bg-gray-50 active:scale-95 sm:p-2.5"
                 >
-                  <Bell className="h-4 w-4 text-[#424245]" />
+                  <motion.span
+                    animate={
+                      notificationCount > 0
+                        ? {
+                            rotate: [0, -10, 10, -8, 8, 0],
+                            x: [0, -1, 1, -1, 1, 0],
+                          }
+                        : undefined
+                    }
+                    transition={
+                      notificationCount > 0
+                        ? {
+                            duration: 0.55,
+                            repeat: Infinity,
+                            repeatDelay: 3.5,
+                            ease: "easeInOut",
+                          }
+                        : undefined
+                    }
+                    className="inline-flex"
+                  >
+                    <Bell className="h-4 w-4 text-[#424245]" />
+                  </motion.span>
                   {notificationCount > 0 && (
-                    <span className="absolute -right-1 -top-1 min-w-5 rounded-full bg-primary px-1.5 py-0.5 text-[10px] font-bold leading-none text-white shadow-sm">
+                    <motion.span
+                      animate={{ scale: [1, 1.08, 1] }}
+                      transition={{ duration: 1.2, repeat: Infinity, ease: "easeInOut" }}
+                      className="absolute -right-1 -top-1 min-w-5 rounded-full bg-primary px-1.5 py-0.5 text-[10px] font-bold leading-none text-white shadow-sm"
+                    >
                       {notificationCount > 9 ? "9+" : notificationCount}
-                    </span>
+                    </motion.span>
                   )}
                 </button>
 
