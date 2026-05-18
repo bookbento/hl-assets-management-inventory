@@ -1,7 +1,24 @@
 // frontend/src/lib/api.ts
-import { Asset, AssetCategory, AssetStatus } from "@prisma/client";
 import { getSession } from "next-auth/react";
 import { API_URL } from "@/lib/config";
+
+export type AssetStatus = "AVAILABLE" | "IN_USE" | "MAINTENANCE" | "RETIRED";
+
+export type AssetCategory = "LAPTOP" | "MONITOR" | "PERIPHERAL" | "NETWORKING" | "MOBILE" | "OTHER";
+
+export type Asset = {
+  id: string;
+  name: string;
+  description?: string | null;
+  serialNumber: string;
+  category: AssetCategory;
+  status: AssetStatus;
+  imageUrl?: string | null;
+  purchaseDate?: string | null;
+  warrantyExpiry?: string | null;
+  createdAt: string;
+  updatedAt: string;
+};
 
 type AssetRecord = Asset & {
   imageUrl?: string | null;

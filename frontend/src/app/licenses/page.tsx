@@ -1,7 +1,7 @@
 "use client";
 
 import { DashboardShell } from "@/components/layout/DashboardShell";
-import { useEffect, useMemo, useState, useRef } from "react";
+import { Suspense, useEffect, useMemo, useState, useRef } from "react";
 import {
   AlertTriangle,
   Calendar,
@@ -125,7 +125,7 @@ const emptyFormState = (license: LicenseRecord): LicenseFormState => ({
   color: license.color || "blue",
 });
 
-export default function LicensesPage() {
+function LicensesPageContent() {
   const queryClient = useQueryClient();
   const searchParams = useSearchParams();
   const searchTerm = searchParams?.get("search") || "";
@@ -923,5 +923,13 @@ export default function LicensesPage() {
         )}
       </AnimatePresence>
     </DashboardShell >
+  );
+}
+
+export default function LicensesPage() {
+  return (
+    <Suspense fallback={<div className="min-h-screen bg-[#F5F5F7]" />}>
+      <LicensesPageContent />
+    </Suspense>
   );
 }
