@@ -231,7 +231,7 @@ function AssetTableContent() {
                   <img
                     src={resolveMediaUrl(primaryImage) || undefined}
                     alt={row.getValue("name")}
-                    className="h-full w-full object-cover"
+                    className="h-full w-full object-contain"
                   />
                 ) : (
                   <ImageIcon className="w-5 h-5 text-[var(--muted-foreground)]" />
@@ -335,7 +335,7 @@ function AssetTableContent() {
     },
   ], [deleteMutation.isPending, employees, assignMutation.isPending, unassignMutation.isPending]);
   const [sorting, setSorting] = React.useState<SortingState>([]);
-  
+
   const sortBy = sorting.length > 0 ? sorting[0].id : undefined;
   const sortOrder = sorting.length > 0 ? (sorting[0].desc ? 'desc' : 'asc') : undefined;
 
@@ -407,8 +407,8 @@ function AssetTableContent() {
                               asc: <ChevronUp className="w-3.5 h-3.5" />,
                               desc: <ChevronDown className="w-3.5 h-3.5" />,
                             }[header.column.getIsSorted() as string] ?? (
-                              <ArrowUpDown className="w-3.5 h-3.5 opacity-30 group-hover:opacity-100 transition-opacity" />
-                            )}
+                                <ArrowUpDown className="w-3.5 h-3.5 opacity-30 group-hover:opacity-100 transition-opacity" />
+                              )}
                           </span>
                         )}
                       </div>
